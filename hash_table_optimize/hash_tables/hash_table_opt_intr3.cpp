@@ -1,154 +1,66 @@
 #include "hash_table.h"
-#include <cstdint>
-#include <immintrin.h>
-#include <bits/types.h>
 
-hash_table* hash_table_ctor(){
 
-    hash_table* ht = (hash_table*)calloc(1, sizeof(hash_table));
-    if(!ht){
-        fprintf(stderr, "Memory allocation error in ht");
-        return NULL;
-    }
+extern "C" unsigned int my_strcmp(const char* s1, const char* s2);
 
-    ht->size = 70001;
-    ht->elements = (node_t**)calloc(ht->size, sizeof(node_t*));
-    if(!ht->elements){
-        fprintf(stderr, "Memory allocation error in ht->elements");
-        return NULL;
-    }
 
-    return ht;
-}
+int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
+    assert(key);
 
-unsigned int my_strcmp(const char* key1, const char* key2){
-    int result = 1;
+    int mask_new = 0;
+
+    uint32_t* hashes = bucket->hashes;
+    if(!hashes) return bucket->capacity;
+
+    char** keys = bucket->keys;
+    if(!keys) return bucket->capacity;
+
+    int size_bucket = bucket->first_free;
 
     asm(".intel_syntax noprefix\n\t" 
-        "vmovdqu ymm2, [%1]\n\t"           
-        "vmovdqu ymm1, [%2]\n\t"            
-        "vpcmpeqb ymm0, ymm1, ymm2\n\t"
-        "vpmovmskb %0, ymm0\n\t"
+        "vmovd   xmm0, %2\n\t"           
+        "vpbroadcastd    ymm0, xmm0\n\t"
+        "vlddqu   ymm1, [%1]\n\t"             
+        "vpcmpeqd ymm0, ymm0, ymm1\n\t"
+        "vmovmskps  %0, ymm0\n\t"
+        "vzeroupper\n\t"
         ".att_syntax prefix\n\t"
-        :"=r"(result)                    
-        :"r"(key1), "r"(key2)             
-        : "ymm0", "ymm1", "ymm2"                     
-    );    
+        :"=r"(mask_new)                    
+        :"r"(hashes), "r"(hash)           
+        : "ymm0", "ymm1"                     
+    );  
 
-    return result;
-}
-
-void hash_table_insert(const char* key, const int len, hash_table* ht){
-    assert(ht);
-    assert(key);
-
-    uint32_t hash = hash_crc32(key);
-    uint32_t idx = hash % ht->size;
-
-    node_t* node = (node_t*)calloc(1, sizeof(node_t));
-
-    node->next = ht->elements[idx];
-    ht->elements[idx] = node;
-
-    node->hash = hash;
-    node->key = strdup(key);
-
-}
-
-bool hash_table_find(const char* key, const int len, const hash_table* ht){
-    assert(ht);
-    assert(key);
-
-    uint32_t hash = hash_crc32(key);
-    uint32_t idx = hash % ht->size;
-
-    node_t* node = find_node(ht->elements[idx], hash, key);
-
-    if(node){
-        return true;
-    }
-    
-    return false;
-
-}
-
-
-__attribute__((noinline))
-node_t* find_node(node_t* node, const uint32_t hash, const char* key){
-    assert(key);
-
-    while(node){
-        if(node->hash == hash && my_strcmp(node->key, key) == 0xFFFFFFFF){
-            return node;
+    while(mask_new){
+        int index = __builtin_ctz(mask_new); // младший установленный бит
+        if(keys[index] && my_strcmp(keys[index], key) == 0xFFFFFFFF){
+            return index;
         }
-        node = node->next;
+        mask_new &= ~(1 << index); // сбраиываем младший установленный бит
     }
 
-    return node;
-}
+    size_bucket -= 8;
 
-void hash_table_dtor(hash_table* ht){
-    if(!ht) return;
-    
-    for(int idx = 0; idx < ht->size; idx++){
-        node_t* node = ht->elements[idx];
-        if(!node) continue;
-
-        while(node->next){
-
-            node_t* next = node->next;
-
-            free((char*)node->key);
-            node->key = NULL;
-
-            free(node);
-
-            node = next;
-        }
-
-        free((char*)node->key);
-        node->key = NULL;
-
-        free(node);
-
-    }
-
-
-    free(ht->elements);
-    free(ht);
-}
-
-void hash_table_dump(const hash_table* ht){
-    assert(ht);
-    
-    for(int idx = 0; idx < ht->size; idx++){
-        node_t* node = ht->elements[idx];
-        if(!node){
-            fprintf(stderr, "[%4d]: NO\n", idx);
-            continue;
-        } 
-
-        fprintf(stderr, "[%4d : %p]: key = %s, next = %p\n", idx, node, node->key, node->next);
-
-        while(node->next){
-            node = node->next;
-            fprintf(stderr, "[   : %p ]: key = %s, next = %p\n", node, node->key, node->next);
+    for(int i = 8; i < size_bucket + 8; i++){
+        if(hashes[i] == hash && my_strcmp(keys[i], key) == 0xFFFFFFFF){
+            return i;
         }
     }
+    return bucket->capacity;
 }
+
+
 
 __attribute__((noinline))
 uint32_t hash_crc32(const char* s){
     assert(s);
 
     uint32_t crc = 0;
-    const uint64_t* p = (const uint64_t*)s;
 
-    crc = _mm_crc32_u64(crc, p[0]);
-    crc = _mm_crc32_u64(crc, p[1]);
-    crc = _mm_crc32_u64(crc, p[2]);
-    crc = _mm_crc32_u64(crc, p[3]);
-    
+    crc = _mm_crc32_u64(crc, *((const uint64_t*)(s + 0)));
+    crc = _mm_crc32_u64(crc, *((const uint64_t*)(s + 8)));
+    crc = _mm_crc32_u64(crc, *((const uint64_t*)(s + 16)));
+    crc = _mm_crc32_u64(crc, *((const uint64_t*)(s + 24)));
+
     return crc;
 
 }

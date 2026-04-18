@@ -100,7 +100,6 @@ char* words_ctor(char* buffer, size_t size){
         while (*p && *p != '\n') p++;
 
         size_t len = p - start - 1;
-        if(len >= 30){printf("%.*s\n", (int)len, start);}
 
         char* block = words + i * WORD_LEN;
         memcpy(block, start, len);

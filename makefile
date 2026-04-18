@@ -14,8 +14,11 @@ OPT_DIR = hash_table_optimize/hash_tables
 OPT_SRC = $(OPT_DIR)/hash_table_no_opt.cpp hash_table_optimize/main_test.cpp
 OPT_SRC21 = $(OPT_DIR)/hash_table_opt_intr2.cpp hash_table_optimize/main_test.cpp
 OPT_SRC22 = $(OPT_DIR)/hash_table_opt_intr22.cpp hash_table_optimize/main_test22.cpp
-OPT_SRC3 = $(OPT_DIR)/hash_table_opt_intr3.cpp hash_table_optimize/main_test.cpp
+OPT_SRC3 = $(OPT_DIR)/hash_table_opt_intr3.cpp hash_table_optimize/main_test22.cpp
+ASM_OBJ  = $(OPT_DIR)/my_strcmp.o
 
+my_strcmp.o: $(OPT_DIR)/my_strcmp.s
+	nasm -f elf64  $< 
 
 opt_test: $(OPT_SRC)
 	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@
@@ -26,8 +29,8 @@ opt_test21: $(OPT_SRC21)
 opt_test22: $(OPT_SRC22)
 	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@ -lbsd
 
-opt_test3: $(OPT_SRC3)
-	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@
+opt_test3: $(ASM_OBJ) $(OPT_SRC3)
+	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@ -lbsd
 
 opt_test_valgrind: $(OPT_SRC)
 	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@
@@ -38,8 +41,8 @@ opt_test_valgrind21: $(OPT_SRC21)
 opt_test_valgrind22: $(OPT_SRC22)
 	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@ -lbsd
 
-opt_test_valgrind3: $(OPT_SRC3)
-	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@
+opt_test_valgrind3: $(ASM_OBJ) $(OPT_SRC3) 
+	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@ -lbsd
 
 run_opt_test:
 	taskset -c 3 ./opt_test 100 20 > results.txt && python3 parse.py no_opt results.txt results.csv
@@ -69,7 +72,7 @@ view_valgrind:
 	kcachegrind callgrind.out.*
 
 clean:
-	rm -f test_hash opt_test opt_test2 opt_test21 opt_test22 opt_test3 opt_test_valgrind opt_test_valgrind2 opt_test_valgrind21  opt_test_valgrind22 opt_test_valgrind3 callgrind.out.*  results.txt
+	rm -f test_hash opt_test opt_test2 opt_test21 opt_test22 opt_test3 opt_test_valgrind opt_test_valgrind2 opt_test_valgrind21  opt_test_valgrind22 opt_test_valgrind3 callgrind.out.* *.o results.txt
 
 
 # -lbsd
