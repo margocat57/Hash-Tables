@@ -4,12 +4,13 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <time.h>
-#include <errno.h>
+#include <ctype.h>
 #include "hash_tables/hash_table.h"
 
 #define NUM_OF_WORDS 376024
-#define NUM_OF_WORDS_TEST 2504096
+#define NUM_OF_WORDS_TEST 2128072
 #define WORD_LEN 32
 
 
@@ -44,25 +45,13 @@ int main(int argc, char *argv[]){
 
     hash_table_dtor(ht);
 
-    free(words);
+    munmap(words, WORD_LEN * NUM_OF_WORDS);
 
-    free(words_test);
+    munmap(words_test, WORD_LEN * NUM_OF_WORDS_TEST);
 
     return 0;
 }
 
-bool incorr_work_with_stat(const char *name_of_file, struct stat *all_info_about_file){
-    assert(name_of_file != NULL);
-    assert(all_info_about_file != NULL);
-
-    if (stat(name_of_file, all_info_about_file) == -1)
-    {
-        perror("Stat error");
-        fprintf(stderr, "Error code: %d\n", errno);
-        return true;
-    }
-    return false;
-}
 
 
 char* get_string_array(const char* filename){
@@ -75,9 +64,8 @@ char* get_string_array(const char* filename){
     }
 
     struct stat file_info = {};
-    bool is_stat_err = incorr_work_with_stat(filename, &(file_info));
-    if (is_stat_err){
-        return NULL;
+    if(stat(filename, &file_info)){
+        fprintf(stderr, "Error getting file info\n");
     }
 
     char* buffer = (char*)calloc((file_info.st_size + 1), sizeof(char));
@@ -89,23 +77,17 @@ char* get_string_array(const char* filename){
 }
 
 char* words_ctor(char* buffer, size_t size){
-    char* words = (char*)aligned_alloc(WORD_LEN, WORD_LEN * size);
-    memset(words, 0, WORD_LEN * size);
+    char* words = (char*)mmap(NULL, WORD_LEN * size, PROT_READ | PROT_WRITE,  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     char* p = buffer;
 
-    int i = 0;
+    for(int i =0; *p; i++){
+        char* start = p;
+        while(*p && *p != '\n') p++;
 
-    while (*p) {
-        const char* start = p;
-        while (*p && *p != '\n') p++;
+        int len = p - start;
+        memcpy(words + i * WORD_LEN, start, len);
 
-        size_t len = p - start - 1;
-
-        char* block = words + i * WORD_LEN;
-        memcpy(block, start, len);
-
-        if (*p == '\n') p++; 
-        i++;
+        while(*p && isspace(*p)) p++;
     }
 
     return words;
@@ -116,7 +98,7 @@ hash_table* prepare_hashtable(char* words){
 
     hash_table* ht = hash_table_ctor();
     for (int j = 0; j < NUM_OF_WORDS; j++){
-        hash_table_insert(words + j * WORD_LEN, WORD_LEN, ht);
+        hash_table_insert(words + j * WORD_LEN, ht);
     }
 
     return ht;
@@ -135,7 +117,7 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
         for(int j = 0; j < NUM_OF_WORDS_TEST; j++){
-            hash_table_find(words + j * WORD_LEN, WORD_LEN, ht);
+            hash_table_find(words + j * WORD_LEN, ht);
         }
 
         clock_gettime(CLOCK_MONOTONIC_RAW, &end);

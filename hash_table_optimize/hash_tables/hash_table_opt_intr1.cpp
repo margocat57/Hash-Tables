@@ -8,7 +8,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     char** keys = bucket->keys;
     int size_bucket = bucket->first_free;
 
-    for(int i = 4; i < size_bucket + 4; i++){
+    for(int i = 0; i < size_bucket; i++){
         if(hashes[i] == hash && !strcmp(keys[i], key)){
             return i;
         }
@@ -18,7 +18,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
 
 
 __attribute__((noinline))
-uint32_t hash_crc32(const char* s){
+uint32_t hash_func(const char* s){
     assert(s);
 
     uint32_t crc = 0;

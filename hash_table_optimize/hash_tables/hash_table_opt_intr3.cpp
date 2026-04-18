@@ -51,7 +51,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
 
 
 __attribute__((noinline))
-uint32_t hash_crc32(const char* s){
+uint32_t hash_func(const char* s){
     assert(s);
 
     uint32_t crc = 0;

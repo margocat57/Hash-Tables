@@ -2,10 +2,13 @@ import random
 import string
 
 def random_word(length=5):
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
+    s = ""
+    for _ in range(length):
+        s += random.choice(string.ascii_lowercase)
+    s += "\n"
+    return s
 
-words = (random_word(random.randint(3,10)) for _ in range(1_000_000))
 
 with open("words.txt", "w") as f:
-    for w in words:
-        f.write(w + "\n")
+    for i in range(1_000_000):
+        f.write(random_word(random.randint(3, 10)))

@@ -1,5 +1,6 @@
 COMPILER = g++
-CFLAGS = -Wall -Wextra
+CFLAGS = -O3 -march=native -Wall -Wextra
+DEBUG_FLAGS = -g3 -ggdb -DDEBUG -DNDEBUG
 
 SRC_DIR = hash_func_choose/hash_tables
 SRC = $(SRC_DIR)/hash_func.cpp $(SRC_DIR)/hash_table.cpp hash_func_choose/test_hashes/test_hash.cpp
@@ -9,70 +10,38 @@ test_hash: $(SRC)
 
 run_test_hash: 
 	./test_hash > hash_func_choose/test_hashes/result.csv
-    
+
+MAIN_FILES = $(OPT_DIR)/hash_tables_func.cpp hash_table_optimize/main_test.cpp 
 OPT_DIR = hash_table_optimize/hash_tables
-OPT_SRC = $(OPT_DIR)/hash_table_no_opt.cpp hash_table_optimize/main_test.cpp
-OPT_SRC21 = $(OPT_DIR)/hash_table_opt_intr2.cpp hash_table_optimize/main_test.cpp
-OPT_SRC22 = $(OPT_DIR)/hash_table_opt_intr22.cpp hash_table_optimize/main_test22.cpp
-OPT_SRC3 = $(OPT_DIR)/hash_table_opt_intr3.cpp hash_table_optimize/main_test22.cpp
-ASM_OBJ  = $(OPT_DIR)/my_strcmp.o
+OPT_SRC_0 = $(OPT_DIR)/hash_table_no_opt.cpp $(MAIN_FILES)
+OPT_SRC_1 = $(OPT_DIR)/hash_table_opt_intr1.cpp $(MAIN_FILES)
+OPT_SRC_2 = $(OPT_DIR)/hash_table_opt_intr2.cpp $(MAIN_FILES)
+OPT_SRC_3 = $(OPT_DIR)/hash_table_opt_intr3.cpp $(MAIN_FILES)
+OPT_EXTRA_3  = $(OPT_DIR)/my_strcmp.o
 
-my_strcmp.o: $(OPT_DIR)/my_strcmp.s
-	nasm -f elf64  $< 
+$(OPT_DIR)/my_strcmp.o: $(OPT_DIR)/my_strcmp.s
+	nasm -f elf64  $< -o $@
 
-opt_test: $(OPT_SRC)
-	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@
+opt_test3: $(OPT_EXTRA_3) $(OPT_SRC_3)
+	$(COMPILER) $(CFLAGS) $^ -o $@ -lbsd
 
-opt_test21: $(OPT_SRC21)
-	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@
+opt_test%:
+	$(COMPILER) $(CFLAGS) $(OPT_SRC_$*) -o $@ -lbsd
 
-opt_test22: $(OPT_SRC22)
-	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@ -lbsd
+opt_test_valgrind3: $(OPT_EXTRA_3) $(OPT_SRC_3)
+	$(COMPILER) $(CFLAGS) $(DEBUG_FLAGS) $^ -o $@ -lbsd
 
-opt_test3: $(ASM_OBJ) $(OPT_SRC3)
-	$(COMPILER) -O3 -march=native $(CFLAGS) $^ -o $@ -lbsd
+opt_test_valgrind%:
+	$(COMPILER) $(CFLAGS) $(DEBUG_FLAGS) $(OPT_SRC_$*) $(OPT_EXTRA_$*) -o $@ -lbsd
 
-opt_test_valgrind: $(OPT_SRC)
-	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@
+run_opt_test%:
+	taskset -c 3 ./opt_test$* 100 20 > results.txt && python3 parse.py opt$* results.txt results.csv
 
-opt_test_valgrind21: $(OPT_SRC21)
-	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@
-
-opt_test_valgrind22: $(OPT_SRC22)
-	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@ -lbsd
-
-opt_test_valgrind3: $(ASM_OBJ) $(OPT_SRC3) 
-	$(COMPILER) -O3 -g3 -ggdb -march=native -DDEBUG -DNDEBUG $(CFLAGS) $^ -o $@ -lbsd
-
-run_opt_test:
-	taskset -c 3 ./opt_test 100 20 > results.txt && python3 parse.py no_opt results.txt results.csv
-
-run_opt_test21:
-	taskset -c 3 ./opt_test21 100 20 > results.txt && python3 parse.py opt21 results.txt results.csv
-
-run_opt_test22:
-	taskset -c 3 ./opt_test22 100 20 > results.txt && python3 parse.py opt22 results.txt results.csv
-
-run_opt_test3:
-	taskset -c 3 ./opt_test3 100 20 > results.txt && python3 parse.py opt3 results.txt results.csv
-
-run_opt_test_valgrind:
-	taskset -c 3 valgrind --tool=callgrind ./opt_test_valgrind 20 5 > results.txt
-
-run_opt_test_valgrind21:
-	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes ./opt_test_valgrind21 20 5 > results.txt
-
-run_opt_test_valgrind22:
-	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes ./opt_test_valgrind22 20 5 > results.txt
-
-run_opt_test_valgrind3:
-	taskset -c 3 valgrind --tool=callgrind ./opt_test_valgrind3 20 5 > results.txt
+run_opt_test_valgrind%:
+	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes ./opt_test_valgrind$* 20 5 > results.txt
 
 view_valgrind:
 	kcachegrind callgrind.out.*
 
 clean:
-	rm -f test_hash opt_test opt_test2 opt_test21 opt_test22 opt_test3 opt_test_valgrind opt_test_valgrind2 opt_test_valgrind21  opt_test_valgrind22 opt_test_valgrind3 callgrind.out.* *.o results.txt
-
-
-# -lbsd
+	rm -f opt_test* test_hash callgrind.out.* *.o $(OPT_EXTRA_3) results.txt
