@@ -45,9 +45,9 @@ int main(int argc, char *argv[]){
 
     hash_table_dtor(ht);
 
-    munmap(words, WORD_LEN * NUM_OF_WORDS);
+    free(words);
 
-    munmap(words_test, WORD_LEN * NUM_OF_WORDS_TEST);
+    free(words_test);
 
     return 0;
 }
