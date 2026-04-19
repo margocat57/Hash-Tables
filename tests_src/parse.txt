@@ -3,3 +3,6 @@ tr -c '[:alpha:]' ' ' < input.txt | tr ' ' '\n' | grep -v '^$' | sort -u > outpu
 sort -u words_alpha.txt -o words_alpha.txt
 
 tr -s '[:space:]' '\n' < words_alpha.txt | awk '{if(length>max){max=length;word=$0}} END{print word}'
+
+cat words_alpha.txt >> words.txt 
+shuf words.txt -o words.txt 

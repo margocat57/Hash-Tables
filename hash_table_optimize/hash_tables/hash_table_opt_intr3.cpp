@@ -12,7 +12,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     uint32_t* hashes = bucket->hashes;
     if(!hashes) return bucket->capacity;
 
-    char** keys = bucket->keys;
+    char* keys = bucket->keys;
     if(!keys) return bucket->capacity;
 
     int size_bucket = bucket->first_free;
@@ -32,7 +32,8 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
 
     while(mask_new){
         int index = __builtin_ctz(mask_new); // младший установленный бит
-        if(keys[index] && my_strcmp(keys[index], key) == 0xFFFFFFFF){
+        char* key_in_hashtable = keys + index * size_word;
+        if(key_in_hashtable && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return index;
         }
         mask_new &= ~(1 << index); // сбраиываем младший установленный бит
@@ -41,7 +42,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     size_bucket -= 8;
 
     for(int i = 8; i < size_bucket + 8; i++){
-        if(hashes[i] == hash && my_strcmp(keys[i], key) == 0xFFFFFFFF){
+        if(hashes[i] == hash && my_strcmp(keys + i *size_word, key) == 0xFFFFFFFF){
             return i;
         }
     }

@@ -1,6 +1,6 @@
 COMPILER = g++
-CFLAGS = -O3 -march=native -Wall -Wextra
-DEBUG_FLAGS = -g3 -ggdb -DDEBUG -DNDEBUG
+CFLAGS = -O3 -march=native  -Wall -Wextra
+DEBUG_FLAGS = -g3 -ggdb -DDEBUG
 
 SRC_DIR = hash_func_choose/hash_tables
 SRC = $(SRC_DIR)/hash_func.cpp $(SRC_DIR)/hash_table.cpp hash_func_choose/test_hashes/test_hash.cpp

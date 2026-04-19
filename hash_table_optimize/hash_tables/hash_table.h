@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <bsd/stdlib.h>
 
-const int NOT_FOUND = -6666;
+const int size_word = 32;
 
 struct bucket_t{
-    char** keys;
+    char* keys;
     uint32_t* hashes;
     int capacity;
     int first_free;

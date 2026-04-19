@@ -8,11 +8,11 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     assert(key);
 
     uint32_t* hashes = bucket->hashes;
-    char** keys = bucket->keys;
+    char* keys = bucket->keys;
     int size_bucket = bucket->first_free;
 
     for(int i = 0; i < size_bucket; i++){
-        if(hashes[i] == hash && !strcmp(keys[i], key)){
+        if(hashes[i] == hash && !strcmp(keys + i *size_word, key)){
             return i;
         }
     }

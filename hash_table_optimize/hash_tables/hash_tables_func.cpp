@@ -1,5 +1,7 @@
 #include "hash_table.h"
 
+
+
 hash_table* hash_table_ctor(){
     hash_table* ht = (hash_table*)calloc(1, sizeof(hash_table));
     if(!ht){
@@ -25,7 +27,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     uint32_t idx = hash % ht->size;
 
     if(!ht->elements[idx].keys && !ht->elements[idx].hashes){
-        ht->elements[idx].keys = (char**)calloc(10, sizeof(char*));
+        ht->elements[idx].keys = (char*)calloc(10, sizeof(char) * size_word);
         if(!ht->elements[idx].keys){
             fprintf(stderr, "Calloc keys in hash_table_insert error");
             return;
@@ -42,7 +44,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     int capacity = ht->elements[idx].capacity;
 
     if(ht->elements[idx].first_free >= capacity){
-        char** keys = (char**)recallocarray(ht->elements[idx].keys, capacity, capacity * 2, sizeof(char*));
+        char* keys = (char*)recallocarray(ht->elements[idx].keys, capacity, capacity * 2, sizeof(char) * size_word);
         if(!keys){
             fprintf(stderr, "Realloc keys in hash_table_insert error");
             return;
@@ -62,8 +64,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     int first_free = ht->elements[idx].first_free;
 
     ht->elements[idx].hashes[first_free] = hash;
-    ht->elements[idx].keys[first_free] = (char*)calloc(32, sizeof(char));
-    memcpy(ht->elements[idx].keys[first_free], key, 32);
+    memcpy(ht->elements[idx].keys + first_free * size_word, key, 32);
 
     ht->elements[idx].first_free++;
 
@@ -91,18 +92,13 @@ void hash_table_dtor(hash_table* ht){
     if(!ht) return;
     
     for(int idx = 0; idx < ht->size; idx++){
-        char** keys = ht->elements[idx].keys;
+        char* keys = ht->elements[idx].keys;
         if(!keys){
             if(ht->elements[idx].hashes){
                 free(ht->elements[idx].hashes);
             }
             continue;
         } 
-
-        int fact_size = ht->elements[idx].first_free;
-        for(int i = 0; i < fact_size; i++){
-            free(keys[i]);
-        }
 
         free(ht->elements[idx].keys);
 
