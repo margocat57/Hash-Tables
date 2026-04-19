@@ -3,7 +3,7 @@ import string
 
 def random_word(length=5):
     s = ""
-    for _ in range(length):
+    for i in range(length):
         s += random.choice(string.ascii_lowercase)
     s += "\n"
     return s

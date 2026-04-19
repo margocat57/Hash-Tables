@@ -39,10 +39,10 @@ uint32_t hash_crc32(const char* s){
     uint32_t crc = 0xFFFFFFFF;
     unsigned char* data= (unsigned char*)s;
 
-    for (size_t i = 0; data[i] != '\0'; i++) {
+    for(size_t i = 0; data[i] != '\0'; i++){
         crc ^= data[i]; 
 
-        for (int bit = 0; bit < 8; bit++) {
+        for(int bit = 0; bit < 8; bit++){
             if (crc & 1)
                 crc = (crc >> 1) ^ POLY;
             else
@@ -59,7 +59,7 @@ uint32_t hash_jenkins_one_at_a_time32(const char* s){
     uint32_t hash = 0;
     unsigned char* data= (unsigned char*)s;
 
-    for (size_t i = 0; data[i] != '\0'; i++) {
+    for(size_t i = 0; data[i] != '\0'; i++){
         hash += data[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
@@ -77,7 +77,7 @@ uint32_t elf_hash(const char* s){
     uint32_t high = 0;
     unsigned char* data= (unsigned char*)s;
 
-    for (size_t i = 0; data[i] != '\0'; i++){
+    for(size_t i = 0; data[i] != '\0'; i++){
         h = (h << 4) + data[i];
         high = h & 0xF0000000;
         if(high != 0){
@@ -94,7 +94,7 @@ uint32_t fnv1a_hash(const char* s){
     uint32_t hash = 2166136261;
     unsigned char* data= (unsigned char*)s;
 
-    for (size_t i = 0; data[i] != '\0'; i++){
+    for(size_t i = 0; data[i] != '\0'; i++){
         hash = hash ^ data[i];
         hash = hash * 16777619;
     }
@@ -139,7 +139,7 @@ uint32_t murmur3_hash(const char* s){
     }
 
     uint32_t rem_bytes = 0;
-    switch (len){
+    switch(len){
         case 3: 
             rem_bytes ^= data[2] << 16;
         case 2: 
