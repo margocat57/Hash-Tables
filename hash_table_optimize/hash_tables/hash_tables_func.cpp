@@ -92,15 +92,9 @@ void hash_table_dtor(hash_table* ht){
     if(!ht) return;
     
     for(int idx = 0; idx < ht->size; idx++){
-        char* keys = ht->elements[idx].keys;
-        if(!keys){
-            if(ht->elements[idx].hashes){
-                free(ht->elements[idx].hashes);
-            }
-            continue;
+        if(ht->elements[idx].keys){
+            free(ht->elements[idx].keys);
         } 
-
-        free(ht->elements[idx].keys);
 
         if(ht->elements[idx].hashes){
             free(ht->elements[idx].hashes);

@@ -25,8 +25,10 @@ uint32_t hash_func(const char* s){
     assert(s);
     uint32_t  poly = 0;
     uint32_t  p = 31;
+    unsigned char* data= (unsigned char*)s;
+
     for(int i = 0; i < 32; i++){
-        poly = poly * p + s[i];
+        poly = poly * p + data[i];
     }
     return poly;
 }

@@ -13,8 +13,9 @@ uint32_t hash_first_letter(const char* s){
 uint32_t hash_sum_letters(const char* s){
     assert(s);
     uint32_t  sum = 0;
-    for(int i = 0; s[i] != '\0'; i++){
-        sum += s[i];
+    unsigned char* data= (unsigned char*)s;
+    for(int i = 0; data[i] != '\0'; i++){
+        sum += data[i];
     }
     return sum;
 }
@@ -33,10 +34,10 @@ uint32_t hash_crc32(const char* s){
     assert(s);
     const uint32_t POLY = 0xEDB88320;
     uint32_t crc = 0xFFFFFFFF;
+    unsigned char* data= (unsigned char*)s;
 
-
-    for (size_t i = 0; s[i] != '\0'; i++) {
-        crc ^= s[i]; 
+    for (size_t i = 0; data[i] != '\0'; i++) {
+        crc ^= data[i]; 
 
         for (int bit = 0; bit < 8; bit++) {
             if (crc & 1)
@@ -53,9 +54,10 @@ uint32_t hash_crc32(const char* s){
 uint32_t hash_jenkins_one_at_a_time32(const char* s){
     assert(s);
     uint32_t hash = 0;
+    unsigned char* data= (unsigned char*)s;
 
-    for (size_t i = 0; s[i] != '\0'; i++) {
-        hash += s[i];
+    for (size_t i = 0; data[i] != '\0'; i++) {
+        hash += data[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
     }
@@ -70,8 +72,10 @@ uint32_t hash_jenkins_one_at_a_time32(const char* s){
 uint32_t elf_hash(const char* s){
     uint32_t h = 0;
     uint32_t high = 0;
-    for (size_t i = 0; s[i] != '\0'; i++){
-        h = (h << 4) + s[i];
+    unsigned char* data= (unsigned char*)s;
+
+    for (size_t i = 0; data[i] != '\0'; i++){
+        h = (h << 4) + data[i];
         high = h & 0xF0000000;
         if(high != 0){
             h = h ^ (high >> 24);
@@ -85,8 +89,10 @@ uint32_t elf_hash(const char* s){
 
 uint32_t fnv1a_hash(const char* s){
     uint32_t hash = 2166136261;
-    for (size_t i = 0; s[i] != '\0'; i++){
-        hash = hash ^ s[i];
+    unsigned char* data= (unsigned char*)s;
+
+    for (size_t i = 0; data[i] != '\0'; i++){
+        hash = hash ^ data[i];
         hash = hash * 16777619;
     }
     return hash;
