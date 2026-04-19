@@ -14,6 +14,7 @@ uint32_t hash_sum_letters(const char* s){
     assert(s);
     uint32_t  sum = 0;
     unsigned char* data= (unsigned char*)s;
+
     for(int i = 0; data[i] != '\0'; i++){
         sum += data[i];
     }
@@ -24,8 +25,10 @@ uint32_t hash_polynomial(const char* s){
     assert(s);
     uint32_t  poly = 0;
     uint32_t  p = 31;
-    for(int i = 0; s[i] != '\0'; i++){
-        poly = poly * p + s[i];
+    unsigned char* data= (unsigned char*)s;
+
+    for(int i = 0; data[i] != '\0'; i++){
+        poly = poly * p + data[i];
     }
     return poly;
 }
