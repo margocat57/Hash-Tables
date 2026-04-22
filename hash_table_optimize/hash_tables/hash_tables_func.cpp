@@ -131,11 +131,13 @@ bool hash_table_linearize(hash_table* ht){
         int size = bucket->size;
         if(size < block_data_amount) size = block_data_amount;
 
-        char* keys = (char*)calloc(size, sizeof(char) * size_word);
+        char* keys = (char*)aligned_alloc(align, size * sizeof(char) * size_word);
         if(!keys) return false;
+        memset(keys, 0, size * sizeof(char) * size_word);
 
-        uint32_t* hashes = (uint32_t*)calloc(size, sizeof(uint32_t));
+        uint32_t* hashes = (uint32_t*)aligned_alloc(align, size * sizeof(uint32_t));
         if(!hashes) return false;
+        memset(hashes, 0, size * sizeof(uint32_t));
 
         int* next = (int*)calloc(size, sizeof(int));
         if(!next) return false;

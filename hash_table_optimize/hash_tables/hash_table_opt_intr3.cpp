@@ -16,7 +16,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
     asm(".intel_syntax noprefix\n\t" 
         "vmovd   xmm0, %2\n\t"           
         "vpbroadcastd    ymm0, xmm0\n\t" //  __m256i hash_intr = _mm256_set1_epi32(hash);
-        "vlddqu   ymm1, [%1]\n\t"        // _m256i first_eight = _mm256_lddqu_si256((__m256i const*)(hashes)); - потому что 0 пойзонед
+        "vmovdqa   ymm1, [%1]\n\t"        // _m256i first_eight = _mm256_load_si256((__m256i const*)(hashes)); 
         "vpcmpeqd ymm0, ymm0, ymm1\n\t"  //  __m256i mask =  _mm256_cmpeq_epi32 (hash_intr, first_eight);
         "vmovmskps  %0, ymm0\n\t"        // int mask_new = _mm256_movemask_ps((__m256)mask);
         ".att_syntax prefix\n\t"
@@ -56,7 +56,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     int i = bucket->list_head;
     for(int idx = 0; idx < size_bucket; idx++){
         char* key_in_hashtable = keys + i * size_word;
-        if(hashes[i] == hash  && key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
+        if(hashes[i] == hash && key_in_hashtable[0] && !strcmp(key_in_hashtable, key)){
             return i;
         }
         i = bucket->next[i];

@@ -10,6 +10,8 @@
 
 const int size_word = 32;
 
+const int align = 32;
+
 const int block_data_amount = 8;
 
 struct bucket_t{

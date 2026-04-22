@@ -77,7 +77,8 @@ char* get_string_array(const char* filename){
 }
 
 char* words_ctor(char* buffer, size_t size){
-    char* words = (char*)calloc(WORD_LEN, size);
+    char* words = (char*)aligned_alloc(align, WORD_LEN * size);
+    memset(words, 0, WORD_LEN * size);
     char* p = buffer;
 
     for(int i =0; *p; i++){
@@ -130,7 +131,7 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
         if(i >= heat_tests)
             tests_results[i - heat_tests] = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-        fprintf(stderr, "test %d ended\n", i);
+        // fprintf(stderr, "test %d ended\n", i);
 
     }
 
