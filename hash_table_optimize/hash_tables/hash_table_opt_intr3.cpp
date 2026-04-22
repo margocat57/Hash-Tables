@@ -28,7 +28,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
     while(mask_new){
         int index = __builtin_ctz(mask_new); // младший установленный бит
         char* key_in_hashtable = keys + index * size_word;
-        if(key_in_hashtable && !strcmp(key_in_hashtable, key)){
+        if(key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return index;
         }
         mask_new &= ~(1 << index); // сбраиываем младший установленный бит

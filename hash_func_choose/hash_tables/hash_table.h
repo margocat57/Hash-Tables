@@ -9,9 +9,7 @@ typedef uint32_t (*hash_func_t)(const char*);
 
 struct node_t {
     node_t* next;
-    node_t* prev;
     const char* key;
-    int val;
     uint32_t hash;
 };
 

@@ -23,13 +23,11 @@ hash_table* hash_table_ctor(int size){
 // --------------------------------------------------------------------------------------------------
 
 // Hash table insert --------------------------------------------------------------------------------
-__attribute__((noinline))
+
 static void fill_arrays(bucket_t* bucket, int start, int end);
 
-__attribute__((noinline))
 static ALLOC_MISTAKES recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity);
 
-__attribute__((noinline))
 static int find_prev_elem(bucket_t* bucket, int elem_idx);
 
 void hash_table_insert(const char* key, hash_table* ht){
@@ -70,7 +68,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     bucket->is_linearized = false;
 
 }
-__attribute__((noinline))
+
 static int find_prev_elem(bucket_t* bucket, int elem_idx){
     int i = bucket->list_head;
     for(int idx = 0; idx < bucket->size; idx++){
@@ -82,7 +80,6 @@ static int find_prev_elem(bucket_t* bucket, int elem_idx){
     return 0;
 }
 
-__attribute__((noinline))
 static void fill_arrays(bucket_t* bucket, int start, int end){
 
     for(int i = start; i < end; i++){
@@ -92,7 +89,6 @@ static void fill_arrays(bucket_t* bucket, int start, int end){
 
 }
 
-__attribute__((noinline))
 static ALLOC_MISTAKES recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity){
     char* keys = (char*)recallocarray(bucket->keys, capacity, new_capacity, sizeof(char) * size_word);
     if(!keys){

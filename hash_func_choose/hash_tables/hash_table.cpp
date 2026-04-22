@@ -111,11 +111,11 @@ void hash_table_dump(const hash_table* ht){
             continue;
         } 
 
-        fprintf(stderr, "[%4d : %p]: key = %s, value = %d, next = %p\n", idx, node, node->key, node->val, node->next);
+        fprintf(stderr, "[%4d : %p]: key = %s, next = %p\n", idx, node, node->key, node->next);
 
         while(node->next){
             node = node->next;
-            fprintf(stderr, "[   : %p ]: key = %s, value = %d, next = %p\n", node, node->key, node->val, node->next);
+            fprintf(stderr, "[   : %p ]: key = %s, next = %p\n", node, node->key, node->next);
         }
     }
 }
