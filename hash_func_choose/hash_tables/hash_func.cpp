@@ -12,7 +12,7 @@ uint32_t hash_first_letter(const char* s){
 
 uint32_t hash_sum_letters(const char* s){
     assert(s);
-    uint32_t  sum = 0;
+    uint32_t sum = 0;
     unsigned char* data= (unsigned char*)s;
 
     for(int i = 0; data[i] != '\0'; i++){
@@ -53,7 +53,7 @@ uint32_t hash_crc32(const char* s){
     return crc ^ 0xFFFFFFFF; 
 }
 
-
+// algo source https://en.wikipedia.org/wiki/Jenkins_hash_function
 uint32_t hash_jenkins_one_at_a_time32(const char* s){
     assert(s);
     uint32_t hash = 0;
@@ -71,7 +71,7 @@ uint32_t hash_jenkins_one_at_a_time32(const char* s){
 }
 
 
-// source https://en.wikipedia.org/wiki/PJW_hash_function
+// algo source https://en.wikipedia.org/wiki/PJW_hash_function
 uint32_t elf_hash(const char* s){
     uint32_t h = 0;
     uint32_t high = 0;
@@ -88,8 +88,7 @@ uint32_t elf_hash(const char* s){
     return h;
 }
 
-// source https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-
+// algo source https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 uint32_t fnv1a_hash(const char* s){
     uint32_t hash = 2166136261;
     unsigned char* data= (unsigned char*)s;
@@ -101,8 +100,7 @@ uint32_t fnv1a_hash(const char* s){
     return hash;
 }
 
-// source https://en.wikipedia.org/wiki/MurmurHash
-
+// algo source https://en.wikipedia.org/wiki/MurmurHash
 uint32_t murmur3_hash(const char* s){
     uint32_t c1 = 0xcc9e2d51;
     uint32_t c2 = 0x1b873593;

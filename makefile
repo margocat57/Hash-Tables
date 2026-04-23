@@ -45,7 +45,7 @@ run_opt_test%:
 	taskset -c 3 ./opt_test$* 100 20 > results.txt && python3 parse.py opt$* results.txt results.csv
 
 run_opt_test_valgrind%:
-	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes --branch-sim=yes ./opt_test_valgrind$* 20 5 > results.txt
+	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 5 > results.txt
 
 view_valgrind:
 	kcachegrind callgrind.out.*

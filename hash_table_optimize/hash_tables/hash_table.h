@@ -35,8 +35,7 @@ enum ALLOC_MISTAKES {
     NO_MISTAKES,
     HASH_ALLOC_MISTAKE,
     KEY_ALLOC_MISTAKE,
-    NEXT_ALLOC_MISTAKE,
-    PREV_ALLOC_MISTAKE
+    NEXT_ALLOC_MISTAKE
 };
 
 hash_table* hash_table_ctor(int size);
@@ -56,5 +55,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key);
 void hash_table_delete(const char* key, hash_table* ht);
 
 uint32_t hash_func(const char* s);
+
+bool bucket_linearize(bucket_t* bucket);
 
 bool hash_table_linearize(hash_table* ht);

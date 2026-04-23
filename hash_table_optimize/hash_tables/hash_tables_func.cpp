@@ -128,54 +128,62 @@ bool hash_table_linearize(hash_table* ht){
 
         if(!bucket->keys || !bucket->hashes || !bucket->next) continue;
 
-        int size = bucket->size;
-        if(size < block_data_amount) size = block_data_amount;
-
-        char* keys = (char*)aligned_alloc(align, size * sizeof(char) * size_word);
-        if(!keys) return false;
-        memset(keys, 0, size * sizeof(char) * size_word);
-
-        uint32_t* hashes = (uint32_t*)aligned_alloc(align, size * sizeof(uint32_t));
-        if(!hashes) return false;
-        memset(hashes, 0, size * sizeof(uint32_t));
-
-        int* next = (int*)calloc(size, sizeof(int));
-        if(!next) return false;
-
-        int i = bucket->list_head;
-        for(int count = 0; count < size; count++){
-            memcpy(keys + count * size_word, bucket->keys + i * size_word, size_word);
-            hashes[count] = bucket->hashes[i];
-
-            i = bucket->next[i];
+        if(!bucket_linearize(bucket)){
+            return false;
         }
-
-        bucket->capacity = size;
-        bucket->list_head = 0;
-        if(size != bucket->size){
-            bucket->first_free = size;
-        }
-        else{
-            bucket->first_free = 0;
-        }
-
-        free(bucket->hashes);
-        bucket->hashes = hashes;
-
-        free(bucket->keys);
-        bucket->keys = keys;
-
-        free(bucket->next);
-        bucket->next = next;
-
-        fill_arrays(bucket, 0, size - 1);
-        bucket->next[bucket->size - 1] = 0;
-
-        bucket->is_linearized = true;
    }
 
    return true;
 
+}
+
+bool bucket_linearize(bucket_t* bucket){
+    int size = bucket->size;
+    if(size < block_data_amount) size = block_data_amount;
+
+    char* keys = (char*)aligned_alloc(align, size * sizeof(char) * size_word);
+    if(!keys) return false;
+    memset(keys, 0, size * sizeof(char) * size_word);
+
+    uint32_t* hashes = (uint32_t*)aligned_alloc(align, size * sizeof(uint32_t));
+    if(!hashes) return false;
+    memset(hashes, 0, size * sizeof(uint32_t));
+
+    int* next = (int*)calloc(size, sizeof(int));
+    if(!next) return false;
+
+    int i = bucket->list_head;
+    for(int count = 0; count < size; count++){
+        memcpy(keys + count * size_word, bucket->keys + i * size_word, size_word);
+        hashes[count] = bucket->hashes[i];
+
+        i = bucket->next[i];
+    }
+
+    bucket->capacity = size;
+    bucket->list_head = 0;
+    if(size != bucket->size){
+        bucket->first_free = size;
+    }
+    else{
+        bucket->first_free = 0;
+    }
+
+    free(bucket->hashes);
+    bucket->hashes = hashes;
+
+    free(bucket->keys);
+    bucket->keys = keys;
+
+    free(bucket->next);
+    bucket->next = next;
+
+    fill_arrays(bucket, 0, size - 1);
+    bucket->next[bucket->size - 1] = 0;
+
+    bucket->is_linearized = true;
+
+    return true;
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -206,6 +214,25 @@ bool hash_table_find(const char* key, const hash_table* ht){
     
     return false;
 
+}
+
+__attribute__((noinline))
+int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
+    assert(key);
+
+    uint32_t* hashes = bucket->hashes;
+    char* keys = bucket->keys;
+    int size_bucket = bucket->size;
+
+    int i = bucket->list_head;
+    for(int idx = 0; idx < size_bucket; idx++){
+        char* key_in_hashtable = keys + i * size_word;
+        if(hashes[i] == hash  && key_in_hashtable[0] && !strcmp(key_in_hashtable, key)){
+            return i;
+        }
+        i = bucket->next[i];
+    }
+    return bucket->capacity;
 }
 
 // --------------------------------------------------------------------------------------------------

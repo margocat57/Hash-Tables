@@ -10,10 +10,16 @@ struct hash_func_and_name{
     const char* hash_name;
 };
 
+#define func_and_name(x) {x, #x}
+
 void ht_dump_buckets_tests(hash_table* ht, hash_func_and_name func_and_name);
 
 int main(){
-    FILE* fp = fopen("../../tests_src/output.txt", "r");
+    FILE* fp = fopen("tests_src/output.txt", "r");
+    if(!fp){
+        fprintf(stderr, "Can't open file\n");
+        return 0;
+    }
     char** keys = (char**)calloc(NUM_OF_WORDS,  sizeof(char*));
 
     for (int i = 0; i < NUM_OF_WORDS; i++) {
@@ -22,16 +28,15 @@ int main(){
     }
 
     hash_func_and_name func[] = {
-        { hash_length,                  "hash_length"},
-        { hash_first_letter,            "hash_first_letter"},
-        { hash_sum_letters,             "hash_sum_letters"},
-        { hash_polynomial,              "hash_polynomial"},
-        { hash_crc32,                   "hash_crc32"},
-        { hash_jenkins_one_at_a_time32, "hash_jenkins_one_at_a_time32"},
-        { elf_hash,                     "elf_hash"},
-        { fnv1a_hash,                   "fnv1a_hash"},
-        { murmur3_hash,                 "murmur3_hash"}
-
+        func_and_name(hash_length),
+        func_and_name(hash_first_letter),
+        func_and_name(hash_sum_letters),
+        func_and_name(hash_polynomial),
+        func_and_name(hash_crc32),
+        func_and_name(hash_jenkins_one_at_a_time32), 
+        func_and_name(elf_hash), 
+        func_and_name(fnv1a_hash),
+        func_and_name(murmur3_hash)
     };
 
     size_t num_of_hash_func = sizeof(func) / sizeof(func[0]);
