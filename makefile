@@ -11,9 +11,11 @@ test_hash: $(SRC)
 run_test_hash: 
 	./test_hash > hash_func_choose/test_hashes/result.csv
 
-MAIN_FILES = $(OPT_DIR)/hash_tables_func.cpp hash_table_optimize/main_test.cpp 
-TEST_HT_FILES = $(OPT_DIR)/hash_tables_func.cpp hash_table_optimize/test_ht_work.cpp $(OPT_DIR)/hash_table_opt_intr2.cpp
+HASH_TABLES = $(OPT_DIR)/hash_tables_func.cpp $(BUCK_DIR)/bucket_func.cpp
+MAIN_FILES = $(HASH_TABLES) hash_table_optimize/main_test.cpp 
+TEST_HT_FILES = $(HASH_TABLES) hash_table_optimize/test_ht_work.cpp $(OPT_DIR)/hash_table_opt_intr2.cpp
 OPT_DIR = hash_table_optimize/hash_tables
+BUCK_DIR = hash_table_optimize/hash_tables/bucket_func
 OPT_SRC_0 = $(OPT_DIR)/hash_table_no_opt.cpp $(MAIN_FILES)
 OPT_SRC_1 = $(OPT_DIR)/hash_table_opt_intr1.cpp $(MAIN_FILES)
 OPT_SRC_2 = $(OPT_DIR)/hash_table_opt_intr2.cpp $(MAIN_FILES)

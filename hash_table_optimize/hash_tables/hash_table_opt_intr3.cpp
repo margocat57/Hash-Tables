@@ -27,17 +27,17 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
 
     while(mask_new){
         int index = __builtin_ctz(mask_new); // младший установленный бит
-        char* key_in_hashtable = keys + index * size_word;
+        char* key_in_hashtable = keys + index * SIZE_WORD;
         if(key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return index;
         }
         mask_new &= ~(1 << index); // сбраиываем младший установленный бит
     }
 
-    size_bucket -= block_data_amount;
+    size_bucket -= BLOCK_DATA_AMOUNT;
 
-    for(int i = block_data_amount; i < size_bucket + block_data_amount; i++){
-        char* key_in_hashtable = keys + i * size_word;
+    for(int i = BLOCK_DATA_AMOUNT; i < size_bucket + BLOCK_DATA_AMOUNT; i++){
+        char* key_in_hashtable = keys + i * SIZE_WORD;
         if(hashes[i] == hash  && key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return i;
         }

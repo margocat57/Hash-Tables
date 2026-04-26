@@ -77,7 +77,7 @@ char* get_string_array(const char* filename){
 }
 
 char* words_ctor(char* buffer, size_t size){
-    char* words = (char*)aligned_alloc(align, WORD_LEN * size);
+    char* words = (char*)aligned_alloc(ALIGN, WORD_LEN * size);
     memset(words, 0, WORD_LEN * size);
     char* p = buffer;
 

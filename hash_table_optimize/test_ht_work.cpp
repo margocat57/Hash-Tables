@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include "hash_tables/hash_table.h"
 
-#define NUM_OF_WORDS 206
+#define NUM_OF_WORDS 50
 #define WORD_LEN 32
 
 
@@ -21,6 +21,8 @@ hash_table* prepare_hashtable(char* words);
 
 void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words);
 
+void test_ht_work(char* words, hash_table* ht);
+
 int main(){
     char* buffer = get_string_array("tests_src/small.txt");
     char* words = words_ctor(buffer, NUM_OF_WORDS);
@@ -28,21 +30,7 @@ int main(){
 
     hash_table* ht = prepare_hashtable(words);
 
-    hash_table_dump(ht);
-
-    for(int i = 0; i < NUM_OF_WORDS; i++){
-        assert(hash_table_find(words + i * WORD_LEN, ht) == true);
-    }
-
-    for(int i = 0; i < NUM_OF_WORDS; i++){
-        if(i % 8 == 0){
-            hash_table_delete(words + i * WORD_LEN, ht);
-            hash_table_dump(ht);
-        }
-    }
-
-    hash_table_linearize(ht);
-    hash_table_dump(ht);
+    test_ht_work(words, ht);
 
     hash_table_dtor(ht);
 
@@ -76,7 +64,7 @@ char* get_string_array(const char* filename){
 }
 
 char* words_ctor(char* buffer, size_t size){
-    char* words = (char*)aligned_alloc(align, WORD_LEN * size);
+    char* words = (char*)aligned_alloc(ALIGN, WORD_LEN * size);
     memset(words, 0, WORD_LEN * size);
     char* p = buffer;
 
@@ -104,3 +92,23 @@ hash_table* prepare_hashtable(char* words){
     return ht;
 }
 
+void test_ht_work(char* words, hash_table* ht){
+    hash_table_dump(ht);
+
+    for(int i = 0; i < NUM_OF_WORDS; i++){
+        assert(hash_table_find(words + i * WORD_LEN, ht) == true);
+    }
+
+    for(int i = 0; i < NUM_OF_WORDS; i++){
+        if(i % 8 == 0){
+            hash_table_delete(words + i * WORD_LEN, ht);
+            printf("\n\n");
+            hash_table_dump(ht);
+        }
+    }
+
+    hash_table_linearize(ht);
+
+    printf("\n AFTER LINEARIZE:\n");
+    hash_table_dump(ht);
+}
