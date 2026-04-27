@@ -6,3 +6,10 @@ tr -s '[:space:]' '\n' < words_alpha.txt | awk '{if(length>max){max=length;word=
 
 cat words_alpha.txt >> words.txt 
 shuf words.txt -o words.txt 
+
+popen("wc -l tests_src/input.txt", "r"); - работаем с файлов (fscanf)
+
+
+cat /sys/devices/system/cpu/cpu3/topology/core_id - узнаем какой core_id у 3 cpu(3 логическом ядре), чтобы уже считывать датчики
+cat /sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq   -  узнаем какая частота
+cat /sys/class/hwmon/hwmon1/temp22_label  - Core 20

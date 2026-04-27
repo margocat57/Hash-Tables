@@ -2,17 +2,19 @@
 #include "hash_table.h"
 #include <cstdio>
 
+static void buckets_dtor(bucket_t* buckets, int size);
+
 // Hash table ctor ----------------------------------------------------------------------------------
 
-hash_table* hash_table_ctor(int size){
+hash_table* hash_table_ctor(int capacity){
     hash_table* ht = (hash_table*)calloc(1, sizeof(hash_table));
     if(!ht){
         fprintf(stderr, "Memory allocation error in ht");
         return NULL;
     }
 
-    ht->size = size;
-    ht->elements = (bucket_t*)calloc(ht->size, sizeof(bucket_t));
+    ht->capacity = capacity;
+    ht->elements = (bucket_t*)calloc(ht->capacity, sizeof(bucket_t));
     if(!ht->elements){
         fprintf(stderr, "Memory allocation error in ht->elements");
         return NULL;
@@ -25,29 +27,56 @@ hash_table* hash_table_ctor(int size){
 
 // Hash table insert --------------------------------------------------------------------------------
 
+static void hash_table_rehash(hash_table* ht);
+
 void hash_table_insert(const char* key, hash_table* ht){
     assert(ht);
     assert(key);
 
+    if((ht->size + 1)/ht->capacity > 10){
+        hash_table_rehash(ht);
+    }
+
     uint32_t hash = hash_func(key);
-    uint32_t idx = hash % ht->size;
+    uint32_t idx = hash % ht->capacity;
     bucket_t* bucket = &(ht->elements[idx]);
 
-    int capacity = bucket->capacity;
-    int size = bucket->size;
+    buckets_insert(bucket, key, hash);
 
-    if(!size){
-        if(bucket_ctor(bucket)) return;
-    }
-    else if(bucket->size == capacity){
-        if(recalloc_arrays(bucket, capacity,capacity * 2)){
-            return;
+    ht->size++;
+}
+
+static void hash_table_rehash(hash_table* ht){
+    assert(ht);
+
+    int new_capacity = ht->capacity * 2 + 1;
+    bucket_t* buckets = (bucket_t*)calloc(new_capacity, sizeof(bucket_t));
+
+    for(int idx = 0; idx < ht->capacity; idx++){
+        bucket_t* bucket = &(ht->elements[idx]);
+
+        int j = bucket->list_head;
+        for(int i = 0; i < bucket->size; i++){
+
+            char* key = bucket->keys + SIZE_WORD * j;
+            uint32_t hash = hash_func(key);
+            uint32_t new_idx = hash % new_capacity;
+
+            if(!buckets_insert(&(buckets[new_idx]), key, hash)){
+                buckets_dtor(buckets, new_capacity);
+                return;
+            }
+
+            j = bucket->next[j];
         }
 
-        bucket->first_free = bucket->size;
     }
 
-    bucket_insert(bucket, key, hash);
+    buckets_dtor(ht->elements, ht->capacity);
+
+    ht->elements = buckets;
+    ht->capacity = new_capacity;
+
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -55,7 +84,7 @@ void hash_table_insert(const char* key, hash_table* ht){
 // Hash table linearize --------------------------------------------------------------------------------
 
 bool hash_table_linearize(hash_table* ht){
-   for(int idx=0; idx < ht->size; idx++){
+   for(int idx=0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
 
         if(!bucket->keys || !bucket->hashes || !bucket->next || !bucket->prev) continue;
@@ -78,10 +107,10 @@ bool hash_table_find(const char* key, const hash_table* ht){
     assert(key);
 
     uint32_t hash = hash_func(key);
-    uint32_t idx = hash % ht->size;
+    uint32_t idx = hash % ht->capacity;
     bucket_t* bucket = &(ht->elements[idx]);
 
-    if(!bucket->keys || !bucket->hashes || !bucket->next) return false;
+    if(!bucket->keys || !bucket->hashes || !bucket->next|| !bucket->prev) return false;
 
     int index = 0;
     if(bucket->is_linearized){
@@ -105,12 +134,14 @@ bool hash_table_find(const char* key, const hash_table* ht){
 
 void hash_table_delete(const char* key, hash_table* ht){
     uint32_t hash = hash_func(key);
-    uint32_t idx = hash % ht->size;
+    uint32_t idx = hash % ht->capacity;
 
     bucket_t* bucket = &(ht->elements[idx]);
     if(!bucket) return;
 
     bucket_delete(bucket, key, hash);
+
+    ht->size--;
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -121,7 +152,7 @@ void hash_table_delete(const char* key, hash_table* ht){
 void hash_table_dtor(hash_table* ht){
     if(!ht) return;
     
-    for(int idx = 0; idx < ht->size; idx++){
+    for(int idx = 0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
         bucket_dtor(bucket);
 
@@ -131,6 +162,21 @@ void hash_table_dtor(hash_table* ht){
     free(ht);
 }
 
+
+
+static void buckets_dtor(bucket_t* buckets, int size){
+    if(!buckets) return;
+    
+    for(int idx = 0; idx < size; idx++){
+        bucket_t* bucket = &(buckets[idx]);
+        bucket_dtor(bucket);
+
+    }
+
+    free(buckets);
+}
+
+
 // --------------------------------------------------------------------------------------------------
 
 // Hash table dump ----------------------------------------------------------------------------------
@@ -138,7 +184,7 @@ void hash_table_dtor(hash_table* ht){
 void hash_table_dump(const hash_table* ht){
     assert(ht);
     
-    for(int idx = 0; idx < ht->size; idx++){
+    for(int idx = 0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
         if(!bucket->keys || !bucket->hashes || !bucket->next){
             fprintf(stderr, "[%4d]: NO\n", idx);

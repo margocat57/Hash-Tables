@@ -34,9 +34,11 @@ bucket_err_t bucket_ctor(bucket_t* bucket);
 
 bucket_err_t recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity);
 
-void bucket_insert(bucket_t* bucket, const char* key, const uint64_t hash);
+bool buckets_insert(bucket_t* bucket, const char* key, const uint32_t hash);
 
-void bucket_delete(bucket_t* bucket, const char* key, const uint64_t hash);
+void bucket_insert(bucket_t* bucket, const char* key, const uint32_t hash);
+
+void bucket_delete(bucket_t* bucket, const char* key, const uint32_t hash);
 
 bucket_err_t bucket_linearize(bucket_t* bucket);
 

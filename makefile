@@ -28,11 +28,17 @@ $(OPT_DIR)/my_strcmp.o: $(OPT_DIR)/my_strcmp.s
 ht_work_test:
 	$(COMPILER) $(CFLAGS) $(TEST_HT_FILES) -o $@ -lbsd
 
+opt_pgo_makeprof0: $(OPT_SRC_0)
+	$(COMPILER) $(CFLAGS) -fprofile-generate  -DNDEBUG $^ -o $@ -lbsd
+
+opt_pgo_doprof0: $(OPT_SRC_0)
+	$(COMPILER) $(CFLAGS) -fprofile-use -DNDEBUG $^ -o $@ -lbsd
+
 opt_test3: $(OPT_EXTRA_3) $(OPT_SRC_3)
-	$(COMPILER) $(CFLAGS) $^ -o $@ -lbsd
+	$(COMPILER) $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
 
 opt_test%:
-	$(COMPILER) $(CFLAGS) $(OPT_SRC_$*) -o $@ -lbsd
+	$(COMPILER) $(CFLAGS) -DNDEBUG  $(OPT_SRC_$*) -o $@ -lbsd
 
 opt_test_valgrind3: $(OPT_EXTRA_3) $(OPT_SRC_3)
 	$(COMPILER) $(CFLAGS) $(DEBUG_FLAGS) $^ -o $@ -lbsd
@@ -44,7 +50,13 @@ run_ht_work_test:
 	./ht_work_test
 
 run_opt_test%:
-	taskset -c 3 ./opt_test$* 100 20 > results.txt && python3 parse.py opt$* results.txt results.csv
+	taskset -c 3 ./opt_test$* 100 20 > results.txt && echo "Process ended" >> "control_freq/control.csv" && python3 parse.py opt$* results.txt results.csv
+
+run_pgo_test1:
+	taskset -c 3 ./opt_pgo_makeprof0 100 20 > results.txt
+
+run_pgo_test2:
+	taskset -c 3 ./opt_pgo_doprof0 100 20 > results.txt  && echo "Process ended" >> "control_freq/control.csv" &&  python3 parse.py pgo results.txt results.csv
 
 run_opt_test_valgrind%:
 	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 5 > results.txt
@@ -53,4 +65,4 @@ view_valgrind:
 	kcachegrind callgrind.out.*
 
 clean:
-	rm -f opt_test* ht_work_test test_hash callgrind.out.* *.o $(OPT_EXTRA_3) results.txt
+	rm -f opt_test* ht_work_test test_hash opt_pgo_makeprof0 opt_pgo_doprof0 callgrind.out.* *.o *.gcda $(OPT_EXTRA_3) results.txt

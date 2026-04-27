@@ -122,7 +122,28 @@ bucket_err_t recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity){
 
 // Bucket insert ------------------------------------------------------------------------------------
 
-void bucket_insert(bucket_t* bucket, const char* key, const uint64_t hash){
+
+bool buckets_insert(bucket_t* bucket, const char* key, const uint32_t hash){
+    int capacity = bucket->capacity;
+    int size = bucket->size;
+
+    if(!size){
+        if(bucket_ctor(bucket)) return false;
+    }
+    else if(bucket->size == capacity){
+        if(recalloc_arrays(bucket, capacity,capacity * 2)){
+            return false;
+        }
+
+        bucket->first_free = bucket->size;
+    }
+
+    bucket_insert(bucket, key, hash);
+
+    return true;
+}
+
+void bucket_insert(bucket_t* bucket, const char* key, const uint32_t hash){
     assert(key);
     assert(bucket);
 
@@ -149,7 +170,7 @@ void bucket_insert(bucket_t* bucket, const char* key, const uint64_t hash){
 
 // Bucket delete ------------------------------------------------------------------------------------
 
-void bucket_delete(bucket_t* bucket, const char* key, const uint64_t hash){
+void bucket_delete(bucket_t* bucket, const char* key, const uint32_t hash){
     assert(key);
     assert(bucket);
 
@@ -164,8 +185,10 @@ void bucket_delete(bucket_t* bucket, const char* key, const uint64_t hash){
     if(index == 0) bucket->list_head = bucket->next[index];
 
     int prev = bucket->prev[index];
-    bucket->next[prev] = bucket->next[index];
-    bucket->prev[bucket->next[index]] = prev;
+    int next = bucket->next[index];
+
+    bucket->next[prev] = next;
+    bucket->prev[next] = prev;
 
     bucket->next[index] = bucket->first_free;
     bucket->prev[index] = -1;

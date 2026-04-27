@@ -11,11 +11,12 @@
 
 
 struct hash_table {
+    int capacity;
     int size;
     bucket_t* elements;
 };
 
-hash_table* hash_table_ctor(int size);
+hash_table* hash_table_ctor(int capacity);
 
 void hash_table_insert(const char* key, hash_table* ht);
 

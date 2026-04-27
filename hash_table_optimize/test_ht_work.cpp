@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include "hash_tables/hash_table.h"
 
-#define NUM_OF_WORDS 50
+#define NUM_OF_WORDS 206
 #define WORD_LEN 32
 
 

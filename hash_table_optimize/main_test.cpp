@@ -131,7 +131,7 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
         if(i >= heat_tests)
             tests_results[i - heat_tests] = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-        fprintf(stderr, "test %d ended\n", i);
+        // fprintf(stderr, "test %d ended\n", i);
 
     }
 
