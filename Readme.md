@@ -169,7 +169,7 @@ valgrind --tool=callgrind --cache-sim=yes
 
 Далее посмотрим, какие функции занимают наибольшую долю времени работы программы:
 
-<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260423_124706.png">
+<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260423_124706.png" width="60%">
 
 
 <img src="Hash_tables_src/images_vlgrnd/Screenshot_20260421_230740.png">
@@ -205,7 +205,7 @@ uint32_t hash_func(const char* s){
 <img src="Hash_tables_src/images_vlgrnd/Screenshot_20260423_125019.png" width="60%">
 
 
-<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260421_231736.png" width="60%">
+<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260421_231736.png">
 
 
 Видим, что основная часть времени выполнения приходится на функцию find_node
@@ -213,7 +213,7 @@ uint32_t hash_func(const char* s){
 int find_node(bucket_t* bucket, const uint32_t hash, const char* key)
 ```
 
-<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260427_123721.png" width="60%">
+<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260427_123721.png">
 
 Вероятно, это связано с тем, что при поиске приходится последовательно проходить по элементам цепочки: для каждого узла сначала сравнивается хэш, а при его совпадении дополнительно выполняется сравнение ключей. Для оптимизации этого напишем ассемблерную вставку, которая будет загружать сразу 8 хэшей из массива и сравнивать их с искомым хэшем, а далее в цикле мы сравним строки для тех ключей, где хэши совпали. Если в бакете больше 8 ключей, то остальные сравним старым способом:
 
@@ -269,10 +269,10 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
 <img src="Hash_tables_src/images_vlgrnd/Screenshot_20260423_125248.png" width="60%">
 
 
-<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260421_232310.png" width="60%">
+<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260421_232310.png">
 
 
-<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260427_124153.png" width="60%">
+<img src="Hash_tables_src/images_vlgrnd/Screenshot_20260427_124153.png">
 
 Видим, что основная часть времени выполнения по прежнему приходится на функцию find_node
 ```c
