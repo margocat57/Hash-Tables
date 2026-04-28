@@ -21,8 +21,9 @@ while true; do
     if [[ -n "$PROCESS" ]]; then
         FREQ=$(cat "$FREQ_FILE")
         TEMP=$(cat "$TEMP_FILE")
+        DATE=$(date +%H-%M-%S)
 
-        echo "$PROCESS;$FREQ;$TEMP" >> "control_freq/control.csv"
+        echo "$PROCESS;$FREQ;$TEMP;$DATE" >> "control_freq/control.csv"
     fi
 
     sleep 0.1

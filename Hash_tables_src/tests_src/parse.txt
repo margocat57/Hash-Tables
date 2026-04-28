@@ -13,3 +13,4 @@ popen("wc -l tests_src/input.txt", "r"); - работаем с файлов (fsc
 cat /sys/devices/system/cpu/cpu3/topology/core_id - узнаем какой core_id у 3 cpu(3 логическом ядре), чтобы уже считывать датчики
 cat /sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq   -  узнаем какая частота
 cat /sys/class/hwmon/hwmon1/temp22_label  - Core 20
+cat /sys/class/hwmon/hwmon1/temp22_input - температура
