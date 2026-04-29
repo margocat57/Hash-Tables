@@ -2,7 +2,6 @@
 #include "hash_table.h"
 #include <cstdio>
 
-static void buckets_dtor(bucket_t* buckets, int size);
 
 // Hash table ctor ----------------------------------------------------------------------------------
 
@@ -151,30 +150,12 @@ void hash_table_delete(const char* key, hash_table* ht){
 
 void hash_table_dtor(hash_table* ht){
     if(!ht) return;
-    
-    for(int idx = 0; idx < ht->capacity; idx++){
-        bucket_t* bucket = &(ht->elements[idx]);
-        bucket_dtor(bucket);
 
-    }
+    buckets_dtor(ht->elements, ht->capacity);
 
-    free(ht->elements);
     free(ht);
 }
 
-
-
-static void buckets_dtor(bucket_t* buckets, int size){
-    if(!buckets) return;
-    
-    for(int idx = 0; idx < size; idx++){
-        bucket_t* bucket = &(buckets[idx]);
-        bucket_dtor(bucket);
-
-    }
-
-    free(buckets);
-}
 
 
 // --------------------------------------------------------------------------------------------------

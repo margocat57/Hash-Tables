@@ -49,6 +49,6 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key);
 
 void bucket_dtor(bucket_t* bucket);
 
-void list_dump_func(const bucket_t* bucket, const char* debug_msg, const char *file, const char *func, int line, ...) __attribute__ ((format (printf, 2, 6)));
+void buckets_dtor(bucket_t* buckets, int size);
 
 #endif //BUCKET

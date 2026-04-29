@@ -38,7 +38,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
 
     for(int i = BLOCK_DATA_AMOUNT; i < size_bucket + BLOCK_DATA_AMOUNT; i++){
         char* key_in_hashtable = keys + i * SIZE_WORD;
-        if(hashes[i] == hash  && key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
+        if(hashes[i] == hash && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return i;
         }
     }
