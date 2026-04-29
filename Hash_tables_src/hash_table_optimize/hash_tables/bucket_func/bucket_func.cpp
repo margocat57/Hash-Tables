@@ -174,7 +174,14 @@ void bucket_delete(bucket_t* bucket, const char* key, const uint32_t hash){
     assert(key);
     assert(bucket);
 
-    int index = find_node(bucket, hash, key);
+    int index = 0;
+    if(bucket->is_linearized){
+        index = find_node_optimized(bucket, hash, key);
+    }
+    else{
+        index = find_node(bucket, hash, key);
+    }
+
     if(index == bucket->capacity){
         return; // значит не получилось удалить
     }
@@ -265,7 +272,7 @@ int find_node(bucket_t* bucket, const uint32_t hash, const char* key){
     int i = bucket->list_head;
     for(int idx = 0; idx < size_bucket; idx++){
         char* key_in_hashtable = keys + i * SIZE_WORD;
-        if(hashes[i] == hash  && key_in_hashtable[0] && !strcmp(key_in_hashtable, key)){
+        if(hashes[i] == hash && !strcmp(key_in_hashtable, key)){
             return i;
         }
         i = bucket->next[i];
@@ -302,3 +309,16 @@ void bucket_dtor(bucket_t* bucket){
 }
 
 // --------------------------------------------------------------------------------------------------
+
+
+void buckets_dtor(bucket_t* buckets, int size){
+    if(!buckets) return;
+    
+    for(int idx = 0; idx < size; idx++){
+        bucket_t* bucket = &(buckets[idx]);
+        bucket_dtor(bucket);
+
+    }
+
+    free(buckets);
+}

@@ -28,3 +28,9 @@ while true; do
 
     sleep 0.1
 done
+
+
+# можно также
+# for i in 0 1 2 3; do
+#   if pgrep -f "run_opt_test$i" > /dev/null; then ...
+
