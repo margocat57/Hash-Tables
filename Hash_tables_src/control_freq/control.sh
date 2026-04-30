@@ -27,7 +27,7 @@ while true; do
     fi
 
     sleep 0.1
-done
+done 
 
 
 # можно также
