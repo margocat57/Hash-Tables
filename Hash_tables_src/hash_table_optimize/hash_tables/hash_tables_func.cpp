@@ -40,7 +40,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     uint32_t idx = hash % ht->capacity;
     bucket_t* bucket = &(ht->elements[idx]);
 
-    buckets_insert(bucket, key, hash);
+    bucket_insert(bucket, key, hash);
 
     ht->size++;
 }
@@ -61,7 +61,7 @@ static void hash_table_rehash(hash_table* ht){
             uint32_t hash = hash_func(key);
             uint32_t new_idx = hash % new_capacity;
 
-            if(!buckets_insert(&(buckets[new_idx]), key, hash)){
+            if(!bucket_insert(&(buckets[new_idx]), key, hash)){
                 buckets_dtor(buckets, new_capacity);
                 return;
             }

@@ -50,13 +50,13 @@ run_ht_work_test:
 	./ht_work_test
 
 run_opt_test%:
-	taskset -c 3 ./opt_test$* 1000 50 > results.txt && python3 parse.py opt$* results.txt results.csv
+	taskset -c 3 ./opt_test$* 1000 50 > results.txt && ./parse.sh opt$* results.txt results.csv
 
 run_pgo_test1:
 	taskset -c 3 ./opt_pgo_makeprof0 1000 50 > results.txt
 
 run_pgo_test2:
-	taskset -c 3 ./opt_pgo_doprof0 1000 50 > results.txt && python3 parse.py pgo results.txt results.csv
+	taskset -c 3 ./opt_pgo_doprof0 1000 50 > results.txt && ./parse.sh pgo results.txt results.csv
 
 run_opt_test_valgrind%:
 	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 5 > results.txt
