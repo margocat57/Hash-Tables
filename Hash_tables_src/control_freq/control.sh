@@ -7,15 +7,15 @@ while true; do
     PROCESS=""
 
     if pgrep -f "run_opt_test0" > /dev/null; then
-        PROCESS="run_opt_test0"
+        PROCESS=$(pgrep -af "run_opt_test0" | grep -oE 'run_opt_test0(_O[0-3]+)?' | head -n 1)
     elif pgrep -f "run_opt_test1" > /dev/null; then
-        PROCESS="run_opt_test1"
+        PROCESS=$(pgrep -af "run_opt_test1" | grep -oE 'run_opt_test1(_O[0-3]+)?' | head -n 1)
     elif pgrep -f "run_opt_test2" > /dev/null; then
-        PROCESS="run_opt_test2"
+        PROCESS=$(pgrep -af "run_opt_test2" | grep -oE 'run_opt_test2(_O[0-3]+)?' | head -n 1)
     elif pgrep -f "run_opt_test3" > /dev/null; then
-        PROCESS="run_opt_test3"
+        PROCESS=$(pgrep -af "run_opt_test3" | grep -oE 'run_opt_test3(_O[0-3]+)?' | head -n 1)
     elif pgrep -f "run_pgo_test2" > /dev/null; then
-        PROCESS="run_pgo_test2"
+        PROCESS=$(pgrep -af "run_pgo_test2" | grep -oE 'run_pgo_test2(_O[0-3]+)?' | head -n 1)
     fi
 
     if [[ -n "$PROCESS" ]]; then
@@ -30,7 +30,4 @@ while true; do
 done 
 
 
-# можно также
-# for i in 0 1 2 3; do
-#   if pgrep -f "run_opt_test$i" > /dev/null; then ...
 
