@@ -123,7 +123,10 @@ bucket_err_t recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity){
 // Bucket insert ------------------------------------------------------------------------------------
 
 
-bool buckets_insert(bucket_t* bucket, const char* key, const uint32_t hash){
+bool bucket_insert(bucket_t* bucket, const char* key, const uint32_t hash){
+    assert(key);
+    assert(bucket);
+
     int capacity = bucket->capacity;
     int size = bucket->size;
 
@@ -137,15 +140,6 @@ bool buckets_insert(bucket_t* bucket, const char* key, const uint32_t hash){
 
         bucket->first_free = bucket->size;
     }
-
-    bucket_insert(bucket, key, hash);
-
-    return true;
-}
-
-void bucket_insert(bucket_t* bucket, const char* key, const uint32_t hash){
-    assert(key);
-    assert(bucket);
 
     int first_free = bucket->first_free;
     bucket->first_free = bucket->next[first_free];
@@ -164,6 +158,8 @@ void bucket_insert(bucket_t* bucket, const char* key, const uint32_t hash){
     bucket->size++;
 
     bucket->is_linearized = false;
+
+    return true;
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -240,8 +236,7 @@ bucket_err_t bucket_linearize(bucket_t* bucket){
 
     bucket->capacity = size;
     bucket->list_head = 0;
-    if(size != bucket->size) bucket->first_free = bucket->size;
-    else bucket->first_free = 0;
+    bucket->first_free = bucket->size;
 
     bucket_dtor(bucket);
 
