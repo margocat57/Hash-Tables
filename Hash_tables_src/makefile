@@ -11,7 +11,8 @@ test_hash: $(SRC)
 run_test_hash: 
 	./test_hash > hash_func_choose/test_hashes/result.csv
 
-HASH_TABLES = $(OPT_DIR)/hash_tables_func.cpp $(BUCK_DIR)/bucket_func.cpp
+STD = ../my_canary_std_func/canary_std_func.cpp
+HASH_TABLES = $(STD) $(OPT_DIR)/hash_tables_func.cpp $(BUCK_DIR)/bucket_func.cpp
 MAIN_FILES = $(HASH_TABLES) hash_table_optimize/main_test.cpp 
 TEST_HT_FILES = $(HASH_TABLES) hash_table_optimize/test_ht_work.cpp $(OPT_DIR)/hash_table_opt_intr2.cpp
 OPT_DIR = hash_table_optimize/hash_tables
@@ -43,11 +44,14 @@ opt_test%:
 opt_test_valgrind3_O%: $(OPT_EXTRA_3) $(OPT_SRC_3)
 	$(COMPILER) -O$* $(CFLAGS) $(DEBUG_FLAGS) $^ -o $@ -lbsd
 
-opt_test_valgrind%_O%:
-	$(COMPILER) -O$(word 2,$(subst _, ,$*)) $(CFLAGS) $(DEBUG_FLAGS) $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
+opt_test_valgrind%:
+	$(COMPILER) -$(word 2,$(subst _, ,$*)) $(CFLAGS) $(DEBUG_FLAGS) $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
 
 run_ht_work_test:
 	./ht_work_test
+
+run_opt_valgrind%:
+	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 10 > results.txt
 
 run_opt_test%:
 	taskset -c 3 ./opt_test$* 1000 50 > results.txt && ./parse.sh opt$* results.txt results.csv
@@ -57,9 +61,6 @@ run_pgo_test1%:
 
 run_pgo_test2%:
 	taskset -c 3 ./opt_pgo_doprof0$* 1000 50 > results.txt && ./parse.sh pgo results.txt results.csv
-
-run_opt_test_valgrind%:
-	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 5 > results.txt
 
 view_valgrind:
 	kcachegrind callgrind.out.*

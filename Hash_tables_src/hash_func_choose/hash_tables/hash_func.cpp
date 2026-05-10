@@ -73,19 +73,19 @@ uint32_t hash_jenkins_one_at_a_time32(const char* s){
 
 // algo source https://en.wikipedia.org/wiki/PJW_hash_function
 uint32_t elf_hash(const char* s){
-    uint32_t h = 0;
+    uint32_t hash = 0;
     uint32_t high = 0;
     unsigned char* data= (unsigned char*)s;
 
     for(size_t i = 0; data[i] != '\0'; i++){
-        h = (h << 4) + data[i];
-        high = h & 0xF0000000;
+        hash = (hash << 4) + data[i];
+        high = hash & 0xF0000000;
         if(high != 0){
-            h = h ^ (high >> 24);
-            h = h & ~high;
+            hash = hash ^ (high >> 24);
+            hash = hash & ~high;
         }
     }
-    return h;
+    return hash;
 }
 
 // algo source https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
@@ -102,12 +102,12 @@ uint32_t fnv1a_hash(const char* s){
 
 // algo source https://en.wikipedia.org/wiki/MurmurHash
 uint32_t murmur3_hash(const char* s){
-    uint32_t c1 = 0xcc9e2d51;
-    uint32_t c2 = 0x1b873593;
+    uint32_t const1 = 0xcc9e2d51;
+    uint32_t const2 = 0x1b873593;
     uint32_t r1 = 15;
     uint32_t r2 = 13;
-    uint32_t m = 5;
-    uint32_t n = 0xe6546b64;
+    uint32_t mult = 5;
+    uint32_t constsum = 0xe6546b64;
 
     uint32_t seed = 0x9747b28c;
     uint32_t hash = seed;
@@ -124,13 +124,13 @@ uint32_t murmur3_hash(const char* s){
         k |= data[2] << 16;
         k |= data[3] << 24;
 
-        k *= c1;
+        k *= const1;
         k = (k << r1) | (k >> (32 - r1));
-        k *= c2;
+        k *= const2;
 
         hash = hash ^ k;
         hash = (hash << r2) | (hash >> (32 - r2));
-        hash = (hash * m) + n;
+        hash = (hash * mult) + constsum;
 
         data += 4;
         len -= 4;
@@ -144,9 +144,9 @@ uint32_t murmur3_hash(const char* s){
             rem_bytes ^= data[1] << 8;
         case 1: 
             rem_bytes ^= data[0];
-            rem_bytes *= c1;
+            rem_bytes *= const1;
             rem_bytes = (rem_bytes << r1) | (rem_bytes >> (32 - r1));
-            rem_bytes *= c2;
+            rem_bytes *= const2;
             hash ^= rem_bytes;
     }
 
@@ -154,7 +154,7 @@ uint32_t murmur3_hash(const char* s){
 	hash ^= hash >> 16;
 	hash *= 0x85ebca6b;
 	hash ^= hash >> 13;
-	hash *= 0xc2b2ae35;
+	hash *= 0xcb2ae35;
 	hash ^= hash >> 16;
 
     return hash;

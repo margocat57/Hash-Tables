@@ -99,18 +99,38 @@ hash_table* prepare_hashtable(char* words){
 
     hash_table* ht = hash_table_ctor(70001);
     for (int j = 0; j < NUM_OF_WORDS; j++){
-        hash_table_insert(words + j * WORD_LEN, ht);
+        bool is_success = hash_table_insert(words + j * WORD_LEN, ht);
+        assert(is_success);
     }
 
     return ht;
+}
+
+bool hash_table_prefare_for_test(hash_table* ht){
+    if(!hash_table_linearize(ht)){
+        printf("Can't linearize and use fast optimizations");
+        return false;
+    }
+
+    if(!hash_table_buckets_resize_up(ht)){
+        printf("Can't resize and use fast optimizations");
+        return false;
+    }
+
+    if(!hash_table_buckets_align(ht)){
+        printf("Can't align and use fast optimizations");
+        return false;
+    }
+
+    return true;
 }
 
 
 void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words){
     assert(ht);
 
-    if(!hash_table_linearize(ht)){
-        printf("Can't linearize and use fast optimizations");
+    if(!hash_table_prefare_for_test(ht)){
+        fprintf(stderr, "Ht can't be prepared for test\n");
         return;
     }
 
@@ -131,7 +151,7 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
         if(i >= heat_tests)
             tests_results[i - heat_tests] = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
-        // fprintf(stderr, "test %d ended\n", i);
+        fprintf(stderr, "test %d ended\n", i);
 
     }
 
