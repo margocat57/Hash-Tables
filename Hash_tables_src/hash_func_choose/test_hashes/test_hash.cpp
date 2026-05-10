@@ -64,7 +64,7 @@ char** create_keys_array(){
     char** keys = (char**)calloc(NUM_OF_WORDS,  sizeof(char*));
 
     for (int i = 0; i < NUM_OF_WORDS; i++) {
-        keys[i] = (char*)calloc(18, sizeof(char)); 
+        keys[i] = (char*)calloc(32, sizeof(char)); 
         fscanf(fp, "%s", keys[i]);
     }
     return keys;

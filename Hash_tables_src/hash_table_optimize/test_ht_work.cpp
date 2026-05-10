@@ -86,7 +86,8 @@ hash_table* prepare_hashtable(char* words){
 
     hash_table* ht = hash_table_ctor(13);
     for (int j = 0; j < NUM_OF_WORDS; j++){
-        hash_table_insert(words + j * WORD_LEN, ht);
+        bool is_success = hash_table_insert(words + j * WORD_LEN, ht);
+        assert(is_success);
     }
 
     return ht;
@@ -100,14 +101,20 @@ void test_ht_work(char* words, hash_table* ht){
     }
 
     for(int i = 0; i < NUM_OF_WORDS; i++){
-        if(i % 8 == 0){
-            hash_table_delete(words + i * WORD_LEN, ht);
-            printf("\n\n");
+        hash_table_delete(words + i * WORD_LEN, ht);
+        if(i % 50 == 0){
             hash_table_dump(ht);
         }
     }
 
+    for(int j = 0; j < NUM_OF_WORDS; j++){
+        bool is_success = hash_table_insert(words + j * WORD_LEN, ht);
+        assert(is_success);
+    }
+
     hash_table_linearize(ht);
+    hash_table_buckets_resize_up(ht);
+    hash_table_buckets_align(ht);
 
     printf("\n AFTER LINEARIZE:\n");
     hash_table_dump(ht);

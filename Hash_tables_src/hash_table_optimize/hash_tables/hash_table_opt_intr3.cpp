@@ -1,11 +1,12 @@
 #include "hash_table.h"
-
+#include <limits.h>
 
 extern "C" unsigned int my_strcmp(const char* s1, const char* s2);
 
-
-int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
+__attribute__((noinline))
+int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char* key){
     assert(key);
+    assert(bucket);
 
     int mask_new = 0;
 
@@ -28,7 +29,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
     while(mask_new){
         int index = __builtin_ctz(mask_new); // младший установленный бит
         char* key_in_hashtable = keys + index * SIZE_WORD;
-        if(key_in_hashtable[0] && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
+        if(my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return index;
         }
         mask_new &= ~(1 << index); // сбраиываем младший установленный бит
@@ -42,7 +43,7 @@ int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
             return i;
         }
     }
-    return bucket->capacity;
+    return INT_MAX;
 }
 
 __attribute__((noinline))

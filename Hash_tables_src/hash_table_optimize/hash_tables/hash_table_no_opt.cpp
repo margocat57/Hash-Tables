@@ -4,7 +4,7 @@
 #include <bits/types.h>
 
 __attribute__((noinline))
-int find_node_optimized(bucket_t* bucket, const uint32_t hash, const char* key){
+int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char* key){
     return find_node(bucket, hash, key);
 }
 
