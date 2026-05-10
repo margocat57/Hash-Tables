@@ -1,6 +1,6 @@
 COMPILER = g++
 CFLAGS = -march=native  -Wall -Wextra
-DEBUG_FLAGS = -g -DDEBUG
+DEBUG_FLAGS = -g
 
 SRC_DIR = hash_func_choose/hash_tables
 SRC = $(SRC_DIR)/hash_func.cpp $(SRC_DIR)/hash_table.cpp hash_func_choose/test_hashes/test_hash.cpp
@@ -42,10 +42,10 @@ opt_test%:
 	$(COMPILER) -$(word 2,$(subst _, ,$*)) $(CFLAGS) -DNDEBUG  $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
 
 opt_test_valgrind3_O%: $(OPT_EXTRA_3) $(OPT_SRC_3)
-	$(COMPILER) -O$* $(CFLAGS) $(DEBUG_FLAGS) $^ -o $@ -lbsd
+	$(COMPILER) -O$* $(CFLAGS) $(DEBUG_FLAGS) -DNDEBUG $^ -o $@ -lbsd
 
 opt_test_valgrind%:
-	$(COMPILER) -$(word 2,$(subst _, ,$*)) $(CFLAGS) $(DEBUG_FLAGS) $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
+	$(COMPILER) -$(word 2,$(subst _, ,$*)) $(CFLAGS) $(DEBUG_FLAGS) -DNDEBUG  $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
 
 run_ht_work_test:
 	./ht_work_test
@@ -54,13 +54,13 @@ run_opt_valgrind%:
 	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 20 10 > results.txt
 
 run_opt_test%:
-	taskset -c 3 ./opt_test$* 1000 50 > results.txt && ./parse.sh opt$* results.txt results.csv
+	taskset -c 3 ./opt_test$* 500 50 > results.txt && ./parse.sh opt$* results.txt results.csv
 
 run_pgo_test1%:
-	taskset -c 3 ./opt_pgo_makeprof0$* 1000 50 > results.txt
+	taskset -c 3 ./opt_pgo_makeprof0$* 500 50 > results.txt
 
 run_pgo_test2%:
-	taskset -c 3 ./opt_pgo_doprof0$* 1000 50 > results.txt && ./parse.sh pgo results.txt results.csv
+	taskset -c 3 ./opt_pgo_doprof0$* 500 50 > results.txt && ./parse.sh pgo results.txt results.csv
 
 view_valgrind:
 	kcachegrind callgrind.out.*

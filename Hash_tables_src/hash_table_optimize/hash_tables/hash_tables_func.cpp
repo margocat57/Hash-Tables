@@ -226,6 +226,9 @@ bool hash_table_buckets_resize_up(hash_table* ht){
     for(int idx = 0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
 
+        if(!bucket->keys || !bucket->hashes || !bucket->next || !bucket->prev)
+            continue;
+
         if(bucket->capacity < 8){
             bucket_resize_up(bucket, 8);
             if(!bucket->capacity_more_or_eqthan_eight){
@@ -246,11 +249,12 @@ bool hash_table_buckets_align(hash_table* ht){
     for(int idx = 0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
 
-        if(bucket->capacity < 8){
-            bucket_keys_hashes_align(bucket, 32);
-            if(!bucket->is_aligned){
-                return false;
-            }
+        if(!bucket->keys || !bucket->hashes || !bucket->next || !bucket->prev)
+            continue;
+
+        bucket_keys_hashes_align(bucket, 32);
+        if(!bucket->is_aligned){
+            return false;
         }
     }
     return true;

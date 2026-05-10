@@ -168,7 +168,6 @@ bool bucket_insert_to_end(bucket_t* bucket, const char* key, const uint32_t hash
     assert(bucket);
 
     int capacity = bucket->capacity;
-    int size = bucket->size;
 
     if(capacity == 0){
         if(bucket_ctor(bucket, 10) != NO_MISTAKE) return false;
@@ -415,7 +414,7 @@ bucket_err_t bucket_verify(const bucket_t* bucket){
 void bucket_resize_up(bucket_t* bucket, size_t new_size){
     if(new_size < bucket->size) return;
 
-    if(recalloc_arrays(bucket, bucket->capacity, 8) != NO_MISTAKE){
+    if(recalloc_arrays(bucket, bucket->capacity, new_size) != NO_MISTAKE){
         return;
     }
 
@@ -428,13 +427,13 @@ void bucket_resize_up(bucket_t* bucket, size_t new_size){
 
 void bucket_keys_hashes_align(bucket_t* bucket, size_t alignment){
 
-    char* aligned_keys = canary_alligned_calloc(sizeof(char) * SIZE_WORD, bucket->capacity, ALIGN);
+    char* aligned_keys = canary_alligned_calloc(sizeof(char) * SIZE_WORD, bucket->capacity,  alignment);
     if(!aligned_keys){
         fprintf(stderr, "Align keys alloc error\n");
         return;
     }
 
-    uint32_t* aligned_hashes = (uint32_t*)canary_alligned_calloc(sizeof(uint32_t), bucket->capacity, ALIGN);
+    uint32_t* aligned_hashes = (uint32_t*)canary_alligned_calloc(sizeof(uint32_t), bucket->capacity,  alignment);
     if(!aligned_hashes){
         canary_free(aligned_keys, sizeof(char) * SIZE_WORD * bucket->capacity);
         fprintf(stderr, "Align hashes alloc error\n");
