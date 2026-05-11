@@ -243,7 +243,7 @@ void bucket_delete_by_physical_index(bucket_t* bucket, int physical_index){
 
     assert(bucket_verify(bucket) == NO_MISTAKE);
 
-    memset(bucket->keys+ SIZE_WORD * physical_index, 0, SIZE_WORD);
+    memset(bucket->keys+ SIZE_WORD * physical_index, '\0', SIZE_WORD);
     bucket->hashes[physical_index] = 0;
 
     if(physical_index == bucket->list_head) bucket->list_head = bucket->next[physical_index];
