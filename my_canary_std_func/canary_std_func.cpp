@@ -7,7 +7,7 @@ char* canary_calloc(size_t size, size_t num_of_elements){
     assert(num_of_elements <= 0.8 * SIZE_MAX);
 
     size_t size_full = size * num_of_elements + 2 * CANARY_SIZE;
-    assert(size <= size_full);
+    assert(size <= size_full); //oveflow check
 
     char* array_and_canaries = (char*)calloc(1, size_full);
     if(!array_and_canaries) return NULL;
@@ -24,7 +24,6 @@ char* canary_alligned_calloc(size_t size, size_t num_of_elements, size_t align){
     assert(num_of_elements <= 0.8 * SIZE_MAX);
 
     assert(align <= 0.8 * SIZE_MAX);
-    assert(align % sizeof(void*) == 0); // нужно для posix_memalign - кратен размеру указателя
     assert(align != 0 && align <= 32);  // потому что канарейка 32-байтная
     assert((align & (align - 1)) == 0); // нужно для posix_memalign - степень двойки
 
