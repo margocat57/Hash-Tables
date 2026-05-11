@@ -183,6 +183,7 @@ bool bucket_insert_to_end(bucket_t* bucket, const char* key, const uint32_t hash
     assert(bucket_verify(bucket) == NO_MISTAKE);
 
     assert(bucket->first_free != -1);
+    assert(bucket->list_head != -1);
 
     int first_free = bucket->first_free;
     bucket->first_free = bucket->next[first_free];

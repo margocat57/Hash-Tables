@@ -14,6 +14,7 @@ hash_table* hash_table_ctor(hash_func_t hash_func){
     ht->hash_func = hash_func;
     ht->elements = (node_t**)calloc(ht->size, sizeof(node_t*));
     if(!ht->elements){
+        free(ht);
         fprintf(stderr, "Memory allocation error in ht->elements");
         return NULL;
     }
@@ -31,6 +32,7 @@ void hash_table_insert(const char* key, hash_table* ht){
     uint32_t idx = hash % ht->size;
 
     node_t* node = (node_t*)calloc(1, sizeof(node_t));
+    if(!node) return;
 
     node->next = ht->elements[idx];
     ht->elements[idx] = node;
