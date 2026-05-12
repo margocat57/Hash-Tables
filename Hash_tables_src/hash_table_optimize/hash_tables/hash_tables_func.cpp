@@ -131,10 +131,10 @@ bool hash_table_find(const char* key, const hash_table* ht){
     uint32_t idx = hash % ht->capacity;
     bucket_t* bucket = &(ht->elements[idx]);
 
-    if(!bucket->keys || !bucket->hashes || !bucket->next|| !bucket->prev) return false;
+    if(ht->elements[idx].capacity == 0) return false;
 
     int index = 0;
-    if(bucket->is_linearized && bucket->is_aligned && bucket->capacity_more_or_eqthan_eight){
+    if(ht->elements[idx].is_linearized && ht->elements[idx].is_aligned && ht->elements[idx].capacity_more_or_eqthan_eight){
         index = find_node_optimized(bucket, hash, key);
     }
     else{

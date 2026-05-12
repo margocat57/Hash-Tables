@@ -6,11 +6,10 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <time.h>
-#include <ctype.h>
 #include "hash_tables/hash_table.h"
 
 #define NUM_OF_WORDS 376024
-#define NUM_OF_WORDS_TEST 2128072
+#define NUM_OF_WORDS_TEST 6354696
 #define WORD_LEN 32
 
 
@@ -31,23 +30,17 @@ int main(int argc, char *argv[]){
     int num_of_tests = atoi(argv[1]);
     int heat_tests = atoi(argv[2]);
 
-    char* buffer = get_string_array("tests_src/words_alpha.txt");
-    char* words = words_ctor(buffer, NUM_OF_WORDS);
-    free(buffer);
+    char* buffer = get_string_array("tests_src/words_alpha.bin");
+    char* test_buffer = get_string_array("tests_src/words1.bin");
 
-    char* test_buffer = get_string_array("tests_src/words.txt");
-    char* words_test = words_ctor(test_buffer, NUM_OF_WORDS_TEST);
-    free(test_buffer);
+    hash_table* ht = prepare_hashtable(buffer);
 
-    hash_table* ht = prepare_hashtable(words);
-
-    test_hashtable(ht, num_of_tests, heat_tests, words_test);
+    test_hashtable(ht, num_of_tests, heat_tests, test_buffer);
 
     hash_table_dtor(ht);
 
-    free(words);
-
-    free(words_test);
+    free(buffer);
+    free(test_buffer);
 
     return 0;
 }
@@ -57,7 +50,7 @@ int main(int argc, char *argv[]){
 char* get_string_array(const char* filename){
     assert(filename);
 
-    FILE* fp = fopen(filename, "r");
+    FILE* fp = fopen(filename, "rb");
     if(!fp){
         fprintf(stderr, "Can't open file");
         return NULL;
@@ -68,7 +61,7 @@ char* get_string_array(const char* filename){
         fprintf(stderr, "Error getting file info\n");
     }
 
-    char* buffer = (char*)calloc((file_info.st_size + 1), sizeof(char));
+    char* buffer = (char*)calloc((file_info.st_size), sizeof(char));
 
     fread(buffer, 1, file_info.st_size, fp);
     fclose(fp);
@@ -76,23 +69,6 @@ char* get_string_array(const char* filename){
     return buffer;
 }
 
-char* words_ctor(char* buffer, size_t size){
-    char* words = (char*)aligned_alloc(ALIGN, WORD_LEN * size);
-    memset(words, 0, WORD_LEN * size);
-    char* p = buffer;
-
-    for(int i =0; *p; i++){
-        char* start = p;
-        while(*p && *p != '\n') p++;
-
-        int len = p - start;
-        memcpy(words + i * WORD_LEN, start, len);
-
-        while(*p && isspace(*p)) p++;
-    }
-
-    return words;
-}
 
 hash_table* prepare_hashtable(char* words){
     assert(words);

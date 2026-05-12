@@ -19,30 +19,6 @@ char* canary_calloc(size_t size, size_t num_of_elements){
     return array_and_canaries + CANARY_SIZE; 
 }
 
-char* canary_alligned_calloc(size_t size, size_t num_of_elements, size_t align){
-    assert(size <= 0.8 * SIZE_MAX);
-    assert(num_of_elements <= 0.8 * SIZE_MAX);
-
-    assert(align <= 0.8 * SIZE_MAX);
-    assert(align != 0 && align <= 32);  // потому что канарейка 32-байтная
-    assert((align & (align - 1)) == 0); // нужно для posix_memalign - степень двойки
-
-    size_t size_full = size * num_of_elements + 2 * CANARY_SIZE;
-    assert(size <= size_full);
-
-    void* data = NULL;
-    if(posix_memalign(&data, align, size_full) != 0) return NULL;
-    char* array_and_canaries = (char*) data;
-
-    memset(array_and_canaries, 0, size_full);
-
-    memcpy(array_and_canaries, CANARY, CANARY_SIZE);
-    
-    memcpy(array_and_canaries + size_full - CANARY_SIZE, CANARY, CANARY_SIZE);
-
-    return array_and_canaries + CANARY_SIZE; 
-}
-
 char* canary_recalloc(void* data, size_t capacity, size_t new_capacity, size_t size_of_elem){
     if(!data){
         return canary_calloc(size_of_elem, new_capacity);
@@ -75,6 +51,73 @@ char* canary_recalloc(void* data, size_t capacity, size_t new_capacity, size_t s
     memcpy(array_and_canaries_new + new_size_in_bytes - CANARY_SIZE, CANARY, CANARY_SIZE);
 
     return array_and_canaries_new + CANARY_SIZE;
+}
+
+
+char* canary_alligned_calloc(size_t size, size_t num_of_elements, size_t align){
+    assert(size <= 0.8 * SIZE_MAX);
+    assert(num_of_elements <= 0.8 * SIZE_MAX);
+
+    assert(align <= 0.8 * SIZE_MAX);
+    assert(align != 0 && align <= 32);  // потому что канарейка 32-байтная
+    assert((align & (align - 1)) == 0); // нужно для posix_memalign - степень двойки
+
+
+    size_t size_full = size * num_of_elements + 2 * CANARY_SIZE;
+    assert(size <= size_full);
+
+    void* data = NULL;
+    if(posix_memalign(&data, align, size_full) != 0) return NULL;
+    char* array_and_canaries = (char*) data;
+
+    memset(array_and_canaries, 0, size_full);
+
+    memcpy(array_and_canaries, CANARY, CANARY_SIZE);
+    
+    memcpy(array_and_canaries + size_full - CANARY_SIZE, CANARY, CANARY_SIZE);
+
+    return array_and_canaries + CANARY_SIZE; 
+}
+
+char* canary_alligned_recalloc(void* data, size_t capacity, size_t new_capacity, size_t size_of_elem, size_t align){
+    if(!data){
+        return canary_alligned_calloc(size_of_elem, new_capacity, align);
+    }
+
+    assert(canary_verify(data, capacity * size_of_elem) == NO_MISTAKE_CANARY);
+    char* array_and_canaries = (char*)data - CANARY_SIZE;
+
+    assert(capacity <= 0.8*SIZE_MAX);
+    assert(new_capacity <= 0.8*SIZE_MAX);
+    assert(size_of_elem <= 0.8*SIZE_MAX);
+
+    assert(align <= 0.8 * SIZE_MAX);
+    assert(align != 0 && align <= 32);  // потому что канарейка 32-байтная
+    assert((align & (align - 1)) == 0); // нужно для posix_memalign - степень двойки
+
+    size_t old_size_in_bytes = capacity * size_of_elem + 2 * CANARY_SIZE;
+    assert(size_of_elem <= old_size_in_bytes);
+
+    size_t new_size_in_bytes = new_capacity * size_of_elem + 2 * CANARY_SIZE;
+    assert(size_of_elem <= new_size_in_bytes);
+
+    void* data_new = NULL;
+    if(posix_memalign(&data_new, align, new_size_in_bytes) != 0) return NULL;
+    char* array_and_canaries_new = (char*) data_new;
+
+    memset(array_and_canaries_new, 0, new_size_in_bytes);
+
+    if(new_capacity < capacity) memcpy(array_and_canaries_new, array_and_canaries, new_size_in_bytes);
+    else                        memcpy(array_and_canaries_new, array_and_canaries, old_size_in_bytes);
+
+    if(new_capacity > capacity) memset(array_and_canaries_new + old_size_in_bytes - CANARY_SIZE, 0, CANARY_SIZE);
+
+    memcpy(array_and_canaries_new + new_size_in_bytes - CANARY_SIZE, CANARY, CANARY_SIZE);
+
+    free(array_and_canaries);
+
+    return array_and_canaries_new + CANARY_SIZE;
+
 }
 
 canary_err_t canary_verify(void* data, size_t user_size){

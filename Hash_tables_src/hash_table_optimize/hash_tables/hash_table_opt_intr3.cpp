@@ -1,6 +1,8 @@
 #include "hash_table.h"
 #include <limits.h>
 
+extern "C" unsigned int find_node_first_eight(const uint32_t* hashes, const uint32_t hash, const char* keys, const char* key);
+
 extern "C" unsigned int my_strcmp(const char* s1, const char* s2);
 
 __attribute__((noinline))
@@ -14,30 +16,10 @@ int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char*
     char* keys = bucket->keys;
     int size_bucket = bucket->size;
 
-    asm(".intel_syntax noprefix\n\t" 
-        "vmovd   xmm0, %2\n\t"           
-        "vpbroadcastd    ymm0, xmm0\n\t" //  __m256i hash_intr = _mm256_set1_epi32(hash);
-        "vmovdqa   ymm1, [%1]\n\t"        // _m256i first_eight = _mm256_load_si256((__m256i const*)(hashes)); 
-        "vpcmpeqd ymm0, ymm0, ymm1\n\t"  //  __m256i mask =  _mm256_cmpeq_epi32 (hash_intr, first_eight);
-        "vmovmskps  %0, ymm0\n\t"        // int mask_new = _mm256_movemask_ps((__m256)mask);
-        ".att_syntax prefix\n\t"
-        :"=r"(mask_new)                    
-        :"r"(hashes), "r"(hash)           
-        : "ymm0", "ymm1"                     
-    );  
+    int idx = find_node_first_eight(hashes, hash, keys, key);
+    if(idx != -1) return idx;
 
-    while(mask_new){
-        int index = __builtin_ctz(mask_new); // младший установленный бит
-        char* key_in_hashtable = keys + index * SIZE_WORD;
-        if(my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
-            return index;
-        }
-        mask_new &= ~(1 << index); // сбраиываем младший установленный бит
-    }
-
-    size_bucket -= BLOCK_DATA_AMOUNT;
-
-    for(int i = BLOCK_DATA_AMOUNT; i < size_bucket + BLOCK_DATA_AMOUNT; i++){
+    for(int i = BLOCK_DATA_AMOUNT; i < size_bucket; i++){
         char* key_in_hashtable = keys + i * SIZE_WORD;
         if(hashes[i] == hash && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
             return i;
