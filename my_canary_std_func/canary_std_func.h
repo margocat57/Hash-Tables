@@ -29,6 +29,8 @@ char* canary_alligned_calloc(size_t size, size_t num_of_elements, size_t align);
 
 char* canary_recalloc(void* data, size_t capacity, size_t new_capacity, size_t size_of_elem);
 
+char* canary_alligned_recalloc(void* data, size_t capacity, size_t new_capacity, size_t size_of_elem, size_t align);
+
 canary_err_t canary_verify(void* data, size_t user_size);
 
 void canary_full_array_memcpy(void* src, void* dst, size_t user_size);
