@@ -42,7 +42,6 @@ struct bucket_t{
     int list_head;   // чтобы безопасно удалять нулевой элемент
     bool is_linearized;
     bool capacity_more_or_eqthan_eight;
-    bool is_aligned; // нужно хэш таблице - выносим туда
     int capacity;
     int first_free;
     int size;

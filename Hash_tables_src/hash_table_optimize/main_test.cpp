@@ -8,18 +8,14 @@
 #include <time.h>
 #include "hash_tables/hash_table.h"
 
-#define NUM_OF_WORDS 376024
-#define NUM_OF_WORDS_TEST 6354696
 #define WORD_LEN 32
 
 
-char* get_string_array(const char* filename);
+char* get_string_array(const char* filename, size_t* num_of_words);
 
-char* words_ctor(char* buffer, size_t size);
+hash_table* prepare_hashtable(char* words, size_t num_of_words);
 
-hash_table* prepare_hashtable(char* words);
-
-void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words);
+void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words, size_t num_of_words);
 
 int main(int argc, char *argv[]){
     if(argc < 3){
@@ -29,13 +25,15 @@ int main(int argc, char *argv[]){
 
     int num_of_tests = atoi(argv[1]);
     int heat_tests = atoi(argv[2]);
+    size_t num_of_words_buffer = 0;
+    size_t num_of_words_test = 0;
 
-    char* buffer = get_string_array("tests_src/words_alpha.bin");
-    char* test_buffer = get_string_array("tests_src/words1.bin");
+    char* buffer = get_string_array("tests_src/words_alpha.bin", &num_of_words_buffer);
+    char* test_buffer = get_string_array("tests_src/words1.bin", &num_of_words_test);
 
-    hash_table* ht = prepare_hashtable(buffer);
+    hash_table* ht = prepare_hashtable(buffer, num_of_words_buffer/WORD_LEN);
 
-    test_hashtable(ht, num_of_tests, heat_tests, test_buffer);
+    test_hashtable(ht, num_of_tests, heat_tests, test_buffer, num_of_words_test/WORD_LEN);
 
     hash_table_dtor(ht);
 
@@ -47,7 +45,7 @@ int main(int argc, char *argv[]){
 
 
 
-char* get_string_array(const char* filename){
+char* get_string_array(const char* filename, size_t* num_of_words){
     assert(filename);
 
     FILE* fp = fopen(filename, "rb");
@@ -61,8 +59,8 @@ char* get_string_array(const char* filename){
         fprintf(stderr, "Error getting file info\n");
     }
 
-    char* buffer = (char*)calloc((file_info.st_size), sizeof(char));
-
+    char* buffer = (char*)aligned_alloc(ALIGN, (file_info.st_size)*sizeof(char));
+    *num_of_words = file_info.st_size;
     fread(buffer, 1, file_info.st_size, fp);
     fclose(fp);
 
@@ -70,11 +68,11 @@ char* get_string_array(const char* filename){
 }
 
 
-hash_table* prepare_hashtable(char* words){
+hash_table* prepare_hashtable(char* words, size_t num_of_words){
     assert(words);
 
     hash_table* ht = hash_table_ctor(70001);
-    for (int j = 0; j < NUM_OF_WORDS; j++){
+    for (int j = 0; j < num_of_words; j++){
         bool is_success = hash_table_insert(words + j * WORD_LEN, ht);
         assert(is_success);
     }
@@ -93,16 +91,11 @@ bool hash_table_prefare_for_test(hash_table* ht){
         return false;
     }
 
-    if(!hash_table_buckets_align(ht)){
-        printf("Can't align and use fast optimizations");
-        return false;
-    }
-
     return true;
 }
 
 
-void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words){
+void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* words, size_t num_of_words){
     assert(ht);
 
     if(!hash_table_prefare_for_test(ht)){
@@ -118,7 +111,7 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
     for(int i = 0; i < num_of_tests + heat_tests; i++){
         clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-        for(int j = 0; j < NUM_OF_WORDS_TEST; j++){
+        for(int j = 0; j < num_of_words; j++){
             hash_table_find(words + j * WORD_LEN, ht);
         }
 

@@ -22,13 +22,17 @@ OPT_SRC_1 = $(OPT_DIR)/hash_table_opt_intr1.cpp $(MAIN_FILES)
 OPT_SRC_2 = $(OPT_DIR)/hash_table_opt_intr2.cpp $(MAIN_FILES)
 OPT_SRC_3 = $(OPT_DIR)/hash_table_opt_intr3.cpp $(MAIN_FILES)
 OPT_EXTRA_2  = $(OPT_DIR)/find_node.o
-OPT_EXTRA_3  = $(OPT_DIR)/my_strcmp.o
+OPT_EXTRA_2_LOOP  = $(OPT_DIR)/find_node_loop.o
+OPT_EXTRA_3_LOOP  = $(OPT_DIR)/find_node_loop3.o
 
 $(OPT_DIR)/find_node.o: $(OPT_DIR)/find_node.s
 	cd "$(dir $<)" && nasm -f elf64 -g -F dwarf "$(notdir $<)" -o "$(abspath $@)"
 
-$(OPT_DIR)/my_strcmp.o: $(OPT_DIR)/my_strcmp.s
-	nasm -f elf64 -g -F dwarf $< -o $@
+$(OPT_DIR)/find_node_loop.o: $(OPT_DIR)/find_node_loop.s
+	cd "$(dir $<)" && nasm -f elf64 -g -F dwarf "$(notdir $<)" -o "$(abspath $@)"
+
+$(OPT_DIR)/find_node_loop3.o: $(OPT_DIR)/find_node_loop3.s
+	cd "$(dir $<)" && nasm -f elf64 -g -F dwarf "$(notdir $<)" -o "$(abspath $@)"
 
 ht_work_test:
 	$(COMPILER) $(CFLAGS) $(TEST_HT_FILES) -o $@ -lbsd
@@ -39,7 +43,10 @@ opt_pgo_makeprof0_O%: $(OPT_SRC_0)
 opt_pgo_doprof0_O%: $(OPT_SRC_0)
 	$(COMPILER) -O$* $(CFLAGS) -fprofile-use -DNDEBUG $^ -o $@ -lbsd
 
-opt_test3_O%: $(OPT_EXTRA_3) $(OPT_SRC_3)
+opt_test3_O%: $(OPT_SRC_3) $(OPT_EXTRA_3_LOOP)
+	$(COMPILER) -O$* $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
+
+opt_test2_loop_O%: $(OPT_EXTRA_2_LOOP) $(OPT_SRC_2)
 	$(COMPILER) -O$* $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
 
 opt_test2_O%: $(OPT_EXTRA_2) $(OPT_SRC_2)
@@ -48,8 +55,11 @@ opt_test2_O%: $(OPT_EXTRA_2) $(OPT_SRC_2)
 opt_test%:
 	$(COMPILER) -$(word 2,$(subst _, ,$*)) $(CFLAGS) -DNDEBUG  $(OPT_SRC_$(word 1,$(subst _, ,$*))) -o $@ -lbsd
 
-opt_test_valgrind3_O%: $(OPT_EXTRA_3) $(OPT_SRC_3)
+opt_test_valgrind3_O%: $(OPT_EXTRA_3_LOOP) $(OPT_SRC_3)
 	$(COMPILER) $(DEBUG_FLAGS) -O$* $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
+
+opt_test_valgrind2_loop_O%: $(OPT_EXTRA_2_LOOP) $(OPT_SRC_2)
+	$(COMPILER) $(DEBUG_FLAGS)  -O$* $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
 
 opt_test_valgrind2_O%:  $(OPT_EXTRA_2) $(OPT_SRC_2)
 	$(COMPILER) $(DEBUG_FLAGS) -O$* $(CFLAGS) -DNDEBUG $^ -o $@ -lbsd
@@ -61,10 +71,10 @@ run_ht_work_test:
 	./ht_work_test
 
 run_opt_valgrind%:
-	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes  ./opt_test_valgrind$* 15 2 > results.txt
+	taskset -c 3 valgrind --tool=callgrind --cache-sim=yes ./opt_test_valgrind$*  15 2 > results.txt
 
 run_opt_test%:
-	taskset -c 3 ./opt_test$* 10 2 > results.txt && ./parse.sh opt$* results.txt results.csv
+	taskset -c 3 ./opt_test$* 250 20 > results.txt && ./parse.sh opt$* results.txt results.csv
 
 run_pgo_test1%:
 	taskset -c 3 ./opt_pgo_makeprof0$* 500 50 > results.txt
@@ -76,4 +86,4 @@ view_valgrind:
 	kcachegrind callgrind.out.*
 
 clean:
-	rm -f opt_test* ht_work_test test_hash opt_pgo_makeprof* opt_pgo_doprof* callgrind.out.* *.o *.gcda $(OPT_EXTRA_2) $(OPT_EXTRA_3) results.txt
+	rm -f opt_test* ht_work_test test_hash opt_pgo_makeprof* opt_pgo_doprof* callgrind.out.* *.o *.gcda $(OPT_EXTRA_2) $(OPT_EXTRA_2_LOOP) $(OPT_EXTRA_3_LOOP) results.txt

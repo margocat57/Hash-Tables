@@ -4,7 +4,7 @@ SIZE_WORD equ 32
 
 extern strcmp
 global find_node_first_eight
-;
+
 ; hashes, hash, strrings, key
 
 find_node_first_eight:
@@ -20,7 +20,8 @@ find_node_first_eight:
                         vmovdqa  ymm1, [rdi]        
                         vpcmpeqd ymm0, ymm0, ymm1 
                         vmovmskps  ebx, ymm0 
-     
+
+                        vzeroupper
 
                         test rbx, 1
                         jz .check_second_bit

@@ -1,9 +1,27 @@
 #include "hash_table.h"
+#include <cstdint>
 #include <limits.h>
 
 extern "C" unsigned int find_node_first_eight(const uint32_t* hashes, const uint32_t hash, const char* keys, const char* key);
 
-extern "C" unsigned int my_strcmp(const char* s1, const char* s2);
+__attribute__((always_inline))
+extern "C" int my_strcmp(const char* key1, const char* key2){
+
+    uint32_t cmp = 0;
+
+    asm(".intel_syntax noprefix\n\t" 
+            "vmovdqa ymm2, [%2]\n\t"       
+            "vmovdqa ymm1, [%1]\n\t"           
+            "vpcmpeqb ymm0, ymm1, ymm2\n\t" 
+            "vpmovmskb %0, ymm0\n\t" 
+            ".att_syntax prefix\n\t"
+            :"=r"(cmp)                    
+            :"r"(key1), "r"(key2)           
+            : "ymm0", "ymm1", "ymm2"    
+    );
+
+    return cmp != 0xFFFFFFFF; // чтобы логика как у стркмп сохранялась
+}
 
 __attribute__((noinline))
 int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char* key){
@@ -21,7 +39,7 @@ int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char*
 
     for(int i = BLOCK_DATA_AMOUNT; i < size_bucket; i++){
         char* key_in_hashtable = keys + i * SIZE_WORD;
-        if(hashes[i] == hash && my_strcmp(key_in_hashtable, key) == 0xFFFFFFFF){
+        if(hashes[i] == hash && !my_strcmp(key_in_hashtable, key)){
             return i;
         }
     }

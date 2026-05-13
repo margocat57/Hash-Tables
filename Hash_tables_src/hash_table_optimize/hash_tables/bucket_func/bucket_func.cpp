@@ -69,13 +69,13 @@ static bucket_err_t calloc_arrays(bucket_t* bucket, char** keys_dst, uint32_t** 
     assert(next_dst);
     assert(prev_dst);
 
-    char* keys = (char*)canary_calloc(sizeof(char) * SIZE_WORD, capacity);
+    char* keys = (char*)canary_alligned_calloc(sizeof(char) * SIZE_WORD, capacity, ALIGN);
     if(!keys){
         fprintf(stderr, "Realloc keys in hash_table_insert error\n");
         return DATA_ALLOC_ERR;
     }
 
-    uint32_t* hashes = (uint32_t*)canary_calloc(sizeof(uint32_t), capacity);
+    uint32_t* hashes = (uint32_t*)canary_alligned_calloc(sizeof(uint32_t), capacity, ALIGN);
     if(!hashes){
         canary_free(keys, sizeof(char) * SIZE_WORD * capacity);
         fprintf(stderr, "Realloc hashes in hash_table_insert error\n");
@@ -104,7 +104,6 @@ static bucket_err_t calloc_arrays(bucket_t* bucket, char** keys_dst, uint32_t** 
     *next_dst = next;
     *prev_dst = prev;
 
-    bucket->is_aligned = false;
     bucket->capacity_more_or_eqthan_eight = (capacity >= 8) ? true : false;
 
     return NO_MISTAKE;
@@ -113,13 +112,13 @@ static bucket_err_t calloc_arrays(bucket_t* bucket, char** keys_dst, uint32_t** 
 bucket_err_t recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity){
     if(!bucket) return BUCKET_NOT_EXISTS;
 
-    char* keys = (char*)canary_recalloc(bucket->keys, capacity, new_capacity, sizeof(char) * SIZE_WORD);
+    char* keys = (char*)canary_alligned_recalloc(bucket->keys, capacity, new_capacity, sizeof(char) * SIZE_WORD, ALIGN);
     if(!keys){
         fprintf(stderr, "Realloc keys in hash_table_insert error\n");
         return DATA_ALLOC_ERR;
     }
 
-    uint32_t* hashes = (uint32_t*)canary_recalloc(bucket->hashes, capacity, new_capacity, sizeof(uint32_t));
+    uint32_t* hashes = (uint32_t*)canary_alligned_recalloc(bucket->hashes, capacity, new_capacity, sizeof(uint32_t), ALIGN);
     if(!hashes){
         canary_free(keys, sizeof(char) * SIZE_WORD * new_capacity);
         fprintf(stderr, "Realloc hashes in hash_table_insert error\n");
@@ -150,7 +149,6 @@ bucket_err_t recalloc_arrays(bucket_t* bucket, int capacity, int new_capacity){
     bucket->next = next;
     bucket->prev = prev;
 
-    bucket->is_aligned = false;
     bucket->capacity_more_or_eqthan_eight = (new_capacity >= 8) ? true : false;
 
     fill_arrays(bucket, capacity, bucket->capacity);
@@ -424,6 +422,8 @@ void bucket_resize_up(bucket_t* bucket, size_t new_size){
 
 // --------------------------------------------------------------------------------------------------
 
+/*
+(уже не надо)
 // Bucket align --------------------------------------------------------------------------------------
 
 void bucket_keys_hashes_align(bucket_t* bucket, size_t alignment){
@@ -449,12 +449,10 @@ void bucket_keys_hashes_align(bucket_t* bucket, size_t alignment){
 
     bucket->keys = aligned_keys;
     bucket->hashes = aligned_hashes;
-
-    bucket->is_aligned = true;
 }
 
 // --------------------------------------------------------------------------------------------------
-
+*/
 // Bucket dtor --------------------------------------------------------------------------------------
 
 void bucket_dtor(bucket_t* bucket){

@@ -134,7 +134,7 @@ bool hash_table_find(const char* key, const hash_table* ht){
     if(ht->elements[idx].capacity == 0) return false;
 
     int index = 0;
-    if(ht->elements[idx].is_linearized && ht->elements[idx].is_aligned && ht->elements[idx].capacity_more_or_eqthan_eight){
+    if(ht->elements[idx].is_linearized && ht->elements[idx].capacity_more_or_eqthan_eight){
         index = find_node_optimized(bucket, hash, key);
     }
     else{
@@ -241,6 +241,8 @@ bool hash_table_buckets_resize_up(hash_table* ht){
 
 // --------------------------------------------------------------------------------------------------
 
+/*
+(уже не надо)
 // Hash table align up -----------------------------------------------------------------------------
 
 bool hash_table_buckets_align(hash_table* ht){
@@ -261,7 +263,7 @@ bool hash_table_buckets_align(hash_table* ht){
 }
 
 // --------------------------------------------------------------------------------------------------
-
+*/
 // Hash table delete --------------------------------------------------------------------------------
 
 void hash_table_delete(const char* key, hash_table* ht){
@@ -276,7 +278,7 @@ void hash_table_delete(const char* key, hash_table* ht){
     if(!bucket) return;
 
     int index = 0;
-    if(bucket->is_linearized && bucket->is_aligned && bucket->capacity_more_or_eqthan_eight){
+    if(bucket->is_linearized && bucket->capacity_more_or_eqthan_eight){
         // здесь именно ассемблерная оптимизация требует чтобы данные лежали плотно, то есть надо хэш таблице
         index = find_node_optimized(bucket, hash, key); 
     }
