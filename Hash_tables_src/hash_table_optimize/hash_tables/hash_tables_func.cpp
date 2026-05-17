@@ -40,7 +40,7 @@ bool hash_table_insert(const char* key, hash_table* ht){
     assert(key);
     assert(hash_table_verify(ht) == NO_MISTAKE_HT);
 
-    if((ht->size + 1)/ht->capacity > 10){
+    if((ht->size + 1)/ht->capacity > LOAD_FACTOR){
         if(!hash_table_rehash(ht)) return false;
     }
 
@@ -191,18 +191,19 @@ hash_table_err_t hash_table_verify(const hash_table* ht){
         return RIGHT_CORRUPTED_HT;
     }
 
-    if(ht->size < 0 && ht->size > ht->capacity){
-        fprintf(stderr, "Incorr hash table size\n");
+    if(ht->size < 0 || (ht->size)/ht->capacity > LOAD_FACTOR){
+        hash_table_dump(ht, "Incorr hash table size");
         return INCORR_SIZE_HT;
     }
 
     if(ht->capacity < 0){
-        fprintf(stderr, "Incorr hash table size\n");
+        hash_table_dump(ht, "Incorr hash table capacity");
         return INCORR_CAPACITY_HT;
     }
 
-    if(canary_verify(ht->elements, sizeof(bucket_t) * ht->capacity) != NO_MISTAKE_CANARY){
-        fprintf(stderr, "Buckets array corrupted\n");
+    canary_err_t err = canary_verify(ht->elements, sizeof(bucket_t) * ht->capacity);
+    if(err != NO_MISTAKE_CANARY){
+        fprintf(stderr, "Buckets array corrupted, err = %d\n", err);
         return BUCKETS_CORR_HT;
     }
 
@@ -326,22 +327,16 @@ void hash_table_dtor(hash_table* ht){
 
 // Hash table dump ----------------------------------------------------------------------------------
 
-void hash_table_dump(const hash_table* ht){
+void hash_table_dump(const hash_table* ht, const char* msg){
     assert(ht);
     
     for(int idx = 0; idx < ht->capacity; idx++){
         bucket_t* bucket = &(ht->elements[idx]);
         if(!bucket->keys || !bucket->hashes || !bucket->next){
-            fprintf(stderr, "[%4d]: NO\n", idx);
             continue;
         } 
 
-        int i = bucket->list_head;
-        int size = bucket->size;
-        for(int count = 0; count < size; count++){
-            fprintf(stderr, "[%4d : %d]: key = %s, next = %d, prev = %d\n", idx, i, bucket->keys + i * SIZE_WORD, bucket->next[i], bucket->prev[i]);
-            i = bucket->next[i];
-        }
+        list_dump_func(bucket, "%s. Dumping bucket %d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__, msg, idx);
     }
 }
 

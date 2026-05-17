@@ -24,7 +24,10 @@ enum bucket_mistakes{
     LEFT_CORRUPTED            = 1 << 12,
     RIGHT_CORRUPTED           = 1 << 13,
     INCORR_ORDER              = 1 << 14,
-    INCORR_FIRST_FREE         = 1 << 16
+    INCORR_FIRST_FREE         = 1 << 16,
+    INCORR_BUCKET_NEXT        = 1 << 17,
+    INCORR_BUCKET_PREV        = 1 << 18,
+    INCORR_FILL_ARRAYS        = 1 << 19
 };
 
 const int SIZE_WORD = 32;

@@ -12,9 +12,9 @@ run_test_hash:
 	./test_hash > hash_func_choose/test_hashes/result.csv
 
 STD = ../my_canary_std_func/canary_std_func.cpp
-HASH_TABLES = $(STD) $(OPT_DIR)/hash_tables_func.cpp $(BUCK_DIR)/bucket_func.cpp
+HASH_TABLES = $(STD) $(OPT_DIR)/hash_tables_func.cpp $(BUCK_DIR)/bucket_func.cpp $(BUCK_DIR)/bucket_dump.cpp
 MAIN_FILES = $(HASH_TABLES) hash_table_optimize/main_test.cpp 
-TEST_HT_FILES = $(HASH_TABLES) hash_table_optimize/test_ht_work.cpp $(OPT_DIR)/hash_table_opt_intr2.cpp
+TEST_HT_FILES = $(HASH_TABLES) hash_table_optimize/test_ht_work.cpp $(OPT_DIR)/hash_table_no_opt.cpp
 OPT_DIR = hash_table_optimize/hash_tables
 BUCK_DIR = hash_table_optimize/hash_tables/bucket_func
 OPT_SRC_0 = $(OPT_DIR)/hash_table_no_opt.cpp $(MAIN_FILES)
@@ -86,4 +86,4 @@ view_valgrind:
 	kcachegrind callgrind.out.*
 
 clean:
-	rm -f opt_test* ht_work_test test_hash opt_pgo_makeprof* opt_pgo_doprof* callgrind.out.* *.o *.gcda $(OPT_EXTRA_2) $(OPT_EXTRA_2_LOOP) $(OPT_EXTRA_3_LOOP) results.txt
+	rm -f opt_test* ht_work_test test_hash opt_pgo_makeprof* opt_pgo_doprof* callgrind.out.* *.o *.gcda $(OPT_EXTRA_2) $(OPT_EXTRA_2_LOOP) $(OPT_EXTRA_3_LOOP) results.txt images/*

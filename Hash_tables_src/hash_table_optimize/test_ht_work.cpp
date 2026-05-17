@@ -23,6 +23,8 @@ void test_hashtable(hash_table* ht, int num_of_tests, int heat_tests, char* word
 
 void test_ht_work(char* words, hash_table* ht);
 
+void test_ht_crash(hash_table* ht);
+
 int main(){
     char* buffer = get_string_array("tests_src/small.txt");
     char* words = words_ctor(buffer, NUM_OF_WORDS);
@@ -94,7 +96,7 @@ hash_table* prepare_hashtable(char* words){
 }
 
 void test_ht_work(char* words, hash_table* ht){
-    hash_table_dump(ht);
+    hash_table_dump(ht, "Dumping when made");
 
     for(int i = 0; i < NUM_OF_WORDS; i++){
         assert(hash_table_find(words + i * WORD_LEN, ht) == true);
@@ -103,7 +105,7 @@ void test_ht_work(char* words, hash_table* ht){
     for(int i = 0; i < NUM_OF_WORDS; i++){
         hash_table_delete(words + i * WORD_LEN, ht);
         if(i % 50 == 0){
-            hash_table_dump(ht);
+            hash_table_dump(ht, "Dump while deleting");
         }
     }
 
@@ -114,8 +116,30 @@ void test_ht_work(char* words, hash_table* ht){
 
     hash_table_linearize(ht);
     hash_table_buckets_resize_up(ht);
-    hash_table_buckets_align(ht);
+    hash_table_dump(ht, "Dump after linearize");
 
-    printf("\n AFTER LINEARIZE:\n");
-    hash_table_dump(ht);
+    test_ht_crash(ht);
+
+}
+
+void test_ht_crash(hash_table* ht){
+    int prev = ht->elements[0].prev[ht->elements[0].first_free];
+    ht->elements[0].prev[ht->elements[0].first_free] = -2;
+    hash_table_verify(ht);
+    ht->elements[0].prev[ht->elements[0].first_free] = prev;
+
+    int size = ht->size;
+    ht->size = (LOAD_FACTOR + 1) * ht->capacity;
+    hash_table_verify(ht);
+    ht->size = size;
+
+    char* keys = ht->elements[0].keys;
+    ht->elements[0].keys = NULL;
+    hash_table_verify(ht);
+    ht->elements[0].keys = keys;
+
+    int next = ht->elements[0].next[0];
+    ht->elements[0].next[0] = 99999;
+    hash_table_verify(ht);
+    ht->elements[0].next[0] = next;
 }

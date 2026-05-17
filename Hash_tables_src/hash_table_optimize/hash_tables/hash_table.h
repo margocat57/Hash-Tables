@@ -8,8 +8,10 @@
 #include <stdlib.h>
 #include <bsd/stdlib.h>
 #include "bucket_func/bucket_func.h"
+#include "bucket_func/bucket_dump.h"
 
 const uint64_t CANARY_VALUE = 0xBADC0FFEE0DDF00Dull;
+const uint64_t LOAD_FACTOR = 10;
 
 typedef uint64_t hash_table_err_t;
 
@@ -46,7 +48,7 @@ int find_node_optimized(const bucket_t* bucket, const uint32_t hash, const char*
 
 void hash_table_dtor(hash_table* ht);
 
-void hash_table_dump(const hash_table* ht);
+void hash_table_dump(const hash_table* ht, const char* msg);
 
 void hash_table_delete(const char* key, hash_table* ht);
 

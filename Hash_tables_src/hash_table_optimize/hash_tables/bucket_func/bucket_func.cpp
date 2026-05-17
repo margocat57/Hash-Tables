@@ -1,4 +1,5 @@
 #include "bucket_func.h"
+#include "bucket_dump.h"
 #include <cstdint>
 #include <stdio.h>
 #include <string.h>
@@ -53,7 +54,6 @@ bucket_err_t bucket_ctor(bucket_t* bucket, int capacity){
     bucket->right_canary = BUCKET_CANARY;
 
     fill_arrays(bucket, 0, capacity);
-    bucket->prev[0] = 0;
 
     return NO_MISTAKE;
 }
@@ -186,11 +186,23 @@ bool bucket_insert_to_end(bucket_t* bucket, const char* key, const uint32_t hash
     int first_free = bucket->first_free;
     bucket->first_free = bucket->next[first_free];
 
-    int last_elem = bucket->prev[bucket->list_head];
-    assert(last_elem != -1);
-
     bucket->hashes[first_free] = hash;
     memcpy(bucket->keys + first_free * SIZE_WORD, key, strlen(key));
+
+    if(bucket->size == 0){
+        // закольцовываем список
+        bucket->next[first_free] = first_free;
+        bucket->prev[first_free] = first_free;
+
+        bucket->size++;
+        bucket->is_linearized = false;
+        assert(bucket_verify(bucket) == NO_MISTAKE);
+
+        return true;
+    }
+
+    int last_elem = bucket->prev[bucket->list_head];
+    assert(last_elem != -1);
 
     bucket->next[last_elem] = first_free;
     bucket->prev[bucket->list_head] = first_free;
@@ -244,7 +256,7 @@ void bucket_delete_by_physical_index(bucket_t* bucket, int physical_index){
     memset(bucket->keys+ SIZE_WORD * physical_index, '\0', SIZE_WORD);
     bucket->hashes[physical_index] = 0;
 
-    if(physical_index == bucket->list_head) bucket->list_head = bucket->next[physical_index];
+    if(physical_index == bucket->list_head && bucket->size != 1) bucket->list_head = bucket->next[physical_index];
 
     int prev = bucket->prev[physical_index];
     assert(prev != -1);
@@ -261,12 +273,6 @@ void bucket_delete_by_physical_index(bucket_t* bucket, int physical_index){
 
     bucket->size--;
     bucket->is_linearized = false;
-
-    if(bucket->size == 0){
-        // иначе мы бы пошли в элемент -1, если бы удалили все элемент а потом захотели вставлять
-        bucket->next[physical_index] = physical_index;
-        bucket->prev[physical_index] = physical_index;
-    }
 
     assert(bucket_verify(bucket) == NO_MISTAKE);
 }
@@ -341,6 +347,10 @@ bucket_err_t bucket_linearize(bucket_t* bucket){
 
 // Bucket verify ------------------------------------------------------------------------------------
 
+bucket_err_t check_order(const bucket_t* bucket);
+
+bucket_err_t check_empty(const bucket_t* bucket);
+
 bucket_err_t bucket_verify(const bucket_t* bucket){
     assert(bucket);
 
@@ -353,52 +363,99 @@ bucket_err_t bucket_verify(const bucket_t* bucket){
         return RIGHT_CORRUPTED;
     }
 
-    if(canary_verify(bucket->keys, sizeof(char) * SIZE_WORD * bucket->capacity) != NO_MISTAKE_CANARY){
-        fprintf(stderr,"Keys canaries corrupted\n");
+    canary_err_t err = canary_verify(bucket->keys, sizeof(char) * SIZE_WORD * bucket->capacity);
+    if(err != NO_MISTAKE_CANARY){
+        fprintf(stderr,"Keys canaries corrupted, err = %d\n", err);
         return KEYS_CORRUPTED;
     }
-    if(canary_verify(bucket->hashes, sizeof(uint32_t) * bucket->capacity) != NO_MISTAKE_CANARY){
-        fprintf(stderr,"Hashes canaries corrupted\n");
+
+    err = canary_verify(bucket->hashes, sizeof(uint32_t) * bucket->capacity);
+    if(err != NO_MISTAKE_CANARY){
+        fprintf(stderr,"Hashes canaries corrupted, err = %d\n", err);
         return HASHES_CORRUPTED;
     }
-    if(canary_verify(bucket->prev, sizeof(int) * bucket->capacity) != NO_MISTAKE_CANARY){
-        fprintf(stderr,"Hashes canaries corrupted\n");
+
+    err = canary_verify(bucket->prev, sizeof(int) * bucket->capacity);
+    if(err != NO_MISTAKE_CANARY){
+        fprintf(stderr,"Prev canaries corrupted, err = %d\n", err);
         return PREV_CORRUPTED;
     }
-    if(canary_verify(bucket->next, sizeof(int) * bucket->capacity) != NO_MISTAKE_CANARY){
-        fprintf(stderr,"Hashes canaries corrupted\n");
+
+    err = canary_verify(bucket->next, sizeof(int) * bucket->capacity);
+    if(err != NO_MISTAKE_CANARY){
+        fprintf(stderr,"Next canaries corrupted, err = %d\n", err);
         return NEXT_CORRUPTED;
     }
 
-    // check order
+    if(bucket->list_head < 0){
+        list_dump_func(bucket, "bucket->list_head < 0", __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        return INCORR_LIST_HEAD;
+    }
+    if(bucket->size < 0 || bucket->size > bucket->capacity){
+        list_dump_func(bucket, "bucket->size < 0", __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        return INCORR_SIZE;
+    }
+    if(bucket->capacity < 0){
+        list_dump_func(bucket, "bucket->capacity < 0", __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        return INCORR_CAPACITY;
+    }
+    if(bucket->first_free >= bucket->capacity || (bucket->first_free < 0 && bucket->first_free != -1)){
+        list_dump_func(bucket, "Incorrect first free", __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        return INCORR_FIRST_FREE;
+    }
+
+    if(bucket->capacity > 0 && (!bucket->keys || !bucket->hashes || !bucket->prev || !bucket->next)){
+        list_dump_func(bucket, "Incorr fill arrays", __FILE__, __PRETTY_FUNCTION__, __LINE__);
+        return INCORR_FILL_ARRAYS;
+    }
+
+    // check order(only for filled)
+    bucket_err_t err_bucket = check_order(bucket);
+    if(err_bucket) return err_bucket;
+
+    err_bucket = check_empty(bucket);
+    if(err_bucket) return err_bucket;
+
+    return NO_MISTAKE;
+
+}
+
+bucket_err_t check_order(const bucket_t* bucket){
     int idx = bucket->list_head;
-    for(int data_idx = 1; data_idx < bucket->size; data_idx++){
+    for(int data_idx = 0; data_idx < bucket->size; data_idx++){
+        if(bucket->next[idx] > bucket->capacity || bucket->next[idx] < 0){
+            list_dump_func(bucket, "bucket->next for idx %d < 0", __FILE__, __PRETTY_FUNCTION__, __LINE__, idx);
+            return INCORR_BUCKET_NEXT;
+        }
+        if(bucket->prev[idx] > bucket->capacity || bucket->prev[idx] < 0){
+            list_dump_func(bucket, "bucket->prev for idx %d < 0", __FILE__, __PRETTY_FUNCTION__, __LINE__, idx);
+            return INCORR_BUCKET_PREV;
+        }
         if(bucket->next[bucket->prev[idx]] != idx || bucket->prev[bucket->next[idx]] != idx){
-            fprintf(stderr,"Bucket order corrupted\n");
+            list_dump_func(bucket, "Incorrect order", __FILE__, __PRETTY_FUNCTION__, __LINE__);
             return INCORR_ORDER;
         }
         idx = bucket->next[idx];
     }
 
-    if(bucket->list_head < 0){
-        fprintf(stderr,"bucket->list_head < 0\n");
-        return INCORR_LIST_HEAD;
-    }
-    if(bucket->size < 0 || bucket->size > bucket->capacity){
-        fprintf(stderr,"bucket->size < 0\n");
-        return INCORR_SIZE;
-    }
-    if(bucket->capacity < 0){
-        fprintf(stderr,"bucket->capacity < 0\n");
-        return INCORR_CAPACITY;
-    }
-    if(bucket->first_free >= bucket->capacity || bucket->first_free < -1){
-        fprintf(stderr,"Incorrect first free\n");
-        return INCORR_FIRST_FREE;
+    return NO_MISTAKE;
+}
+
+bucket_err_t check_empty(const bucket_t* bucket){
+    int idx = bucket->first_free;
+    for(int data_idx = 0; data_idx < bucket->capacity - bucket->size; data_idx++){
+        if(bucket->next[idx] > bucket->capacity || (bucket->next[idx] < 0 && data_idx != bucket->capacity - bucket->size - 1)){
+            list_dump_func(bucket, "bucket->next for idx %d incorrect", __FILE__, __PRETTY_FUNCTION__, __LINE__, idx);
+            return INCORR_BUCKET_NEXT;
+        }
+        if(bucket->prev[idx] != -1){
+            list_dump_func(bucket, "bucket->prev for idx %d != -1", __FILE__, __PRETTY_FUNCTION__, __LINE__, idx);
+            return INCORR_BUCKET_PREV;
+        }
+        idx = bucket->next[idx];
     }
 
     return NO_MISTAKE;
-
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -416,6 +473,8 @@ void bucket_resize_up(bucket_t* bucket, size_t new_size){
     if(recalloc_arrays(bucket, bucket->capacity, new_size) != NO_MISTAKE){
         return;
     }
+
+    bucket->first_free = bucket->size; // потому что фактически мы увеличили количество элементов в бакете
 
     bucket->capacity_more_or_eqthan_eight = true;
 }
