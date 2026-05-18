@@ -190,7 +190,7 @@ bool bucket_insert_to_end(bucket_t* bucket, const char* key, const uint32_t hash
     memcpy(bucket->keys + first_free * SIZE_WORD, key, strlen(key));
 
     if(bucket->size == 0){
-        // закольцовываем список
+        // закольцовываем список - если список пустой
         bucket->next[first_free] = first_free;
         bucket->prev[first_free] = first_free;
 
