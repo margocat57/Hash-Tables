@@ -98,7 +98,7 @@ static void draw_table(const bucket_t* list, FILE* html_output){
 
     fprintf(html_output, "<tr>\n");
     fprintf(html_output, "<td style = \"color: #000000;\">Prev</td>");
-    for (int i = 0; i < list->size; i++) {
+    for (int i = 0; i < list->capacity; i++) {
         fprintf(html_output, "<td style = \"border: 1px solid #000000; color: #000000;\";>%d</td>\n", list->prev[i]);
     }
     fprintf(html_output, "</tr>\n");
